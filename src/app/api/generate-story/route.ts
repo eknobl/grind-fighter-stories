@@ -7,20 +7,30 @@ import { Fighter } from '@/types/fighter';
 export const maxDuration = 30;
 
 function buildFighterProfile(f: Fighter): string {
+  const powerLines = (f.powers ?? []).map(p => {
+    const cost = p.mpCost > 0 ? `${p.mpCost} MP` : p.preFight ? 'pre-fight activation' : 'passive (free)';
+    const recovery = p.recoverySeconds > 0 ? `${p.recoverySeconds}s recovery` : 'no recovery';
+    const duration = p.durationSeconds > 0 ? `${p.durationSeconds}s duration` : p.durationSeconds === 0 ? 'instant' : 'permanent';
+    return `    [${p.tier.toUpperCase()} ${p.category.toUpperCase()}] ${p.name} — ${cost}, ${recovery}, ${duration}\n      Effect: ${p.effect}`;
+  }).join('\n');
+
   return `
 FIGHTER: ${f.name}
   Org: ${f.org} | Species: ${f.species} | Origin: ${f.origin}
   Style: ${f.fightingStyle} | Signature Move: ${f.signatureMove}
-  Humanware: Type ${f.humanwareType} (${f.primaryAxis} axis)
-  
+  Humanware: Type ${f.humanwareType} (${f.primaryAxis} axis) | ${f.powerSlots ?? 1} slot${(f.powerSlots ?? 1) > 1 ? 's' : ''}
+
   PHYSICAL (Arena Feed):
     STR ${f.stats.strength} | DEX ${f.stats.dexterity} | END ${f.stats.endurance}
-    HP: ${f.hp} (Endurance × 2)
-  
+    HP: ${f.hp}
+
   DIGITAL (Ghost Feed):
     LOG ${f.stats.logic} | INS ${f.stats.instinct} | WIL ${f.stats.willpower}
-    MP: ${f.mp} (Willpower × 2)
-  
+    MP: ${f.mp}
+
+  POWERS:
+${powerLines || '    (none)'}
+
   LUCK: ${f.luck}/20 — ${f.luckLabel}
   TEAM QUALITY: ${f.teamQuality}/10${f.teamNote ? ` (Note: ${f.teamNote})` : ''}
   OFFICIAL SCORE: ${f.officialScore} (Seed #${f.rank})

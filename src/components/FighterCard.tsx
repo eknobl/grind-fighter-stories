@@ -50,8 +50,8 @@ export function FighterCard({ fighter, onClick, onEdit, isSelected }: FighterCar
     return (
         <div
             className={`border rounded-lg p-4 transition-all hover:shadow-lg relative group ${isSelected
-                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 ring-2 ring-indigo-200 dark:ring-indigo-800'
-                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
+                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 ring-2 ring-indigo-200 dark:ring-indigo-800'
+                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
                 }`}
         >
             <div onClick={() => onClick && onClick(fighter)} className="cursor-pointer">
@@ -84,8 +84,8 @@ export function FighterCard({ fighter, onClick, onEdit, isSelected }: FighterCar
                 {/* Humanware + Axis */}
                 <div className="flex gap-2 mb-3 text-xs">
                     <span className={`px-2 py-0.5 rounded font-semibold border ${fighter.humanwareType === 4
-                            ? 'bg-indigo-900/40 text-indigo-300 border-indigo-700'
-                            : 'bg-gray-700/40 text-gray-300 border-gray-600'
+                        ? 'bg-indigo-900/40 text-indigo-300 border-indigo-700'
+                        : 'bg-gray-700/40 text-gray-300 border-gray-600'
                         }`}>
                         Type {fighter.humanwareType}
                     </span>
@@ -116,6 +116,43 @@ export function FighterCard({ fighter, onClick, onEdit, isSelected }: FighterCar
                         <StatBar label="WIL" value={fighter.stats.willpower} color="bg-purple-500" />
                     </div>
                 </div>
+
+                {/* Powers */}
+                {fighter.powers && fighter.powers.length > 0 && (
+                    <div className="mb-3">
+                        <p className="text-xs uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1.5 font-semibold">
+                            Powers · {fighter.powerSlots} slot{fighter.powerSlots > 1 ? 's' : ''}
+                        </p>
+                        <div className="space-y-1.5">
+                            {fighter.powers.map(p => (
+                                <div
+                                    key={p.id}
+                                    className="flex items-start gap-1.5 group/power"
+                                    title={p.effect}
+                                >
+                                    {/* Tier badge */}
+                                    <span className={`shrink-0 text-[9px] font-bold px-1 py-0.5 rounded leading-none ${p.tier === 'Signature' ? 'bg-purple-900/60 text-purple-300' :
+                                            p.tier === 'Major' ? 'bg-red-900/50 text-red-300' :
+                                                p.tier === 'Moderate' ? 'bg-amber-900/50 text-amber-300' :
+                                                    p.tier === 'Minor' ? 'bg-blue-900/50 text-blue-300' :
+                                                        'bg-gray-700 text-gray-400'
+                                        }`}>
+                                        {p.tier === 'Signature' ? 'SIG' :
+                                            p.tier === 'Major' ? 'MAJ' :
+                                                p.tier === 'Moderate' ? 'MOD' :
+                                                    p.tier === 'Minor' ? 'MIN' : 'PSV'}
+                                    </span>
+                                    <span className="text-xs font-semibold text-gray-800 dark:text-gray-100 leading-tight">
+                                        {p.name}
+                                    </span>
+                                    <span className="text-xs text-gray-400 dark:text-gray-500 ml-auto shrink-0">
+                                        {p.mpCost > 0 ? `${p.mpCost}MP` : p.preFight ? 'PRE' : '—'}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Team Quality + Score */}
                 <div className="flex justify-between items-center text-xs border-t border-gray-200 dark:border-gray-700 pt-2 mt-1">

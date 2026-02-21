@@ -1,18 +1,12 @@
 import {
     Fighter, Species, OrgAffiliation, FightingStyle, OriginWorld,
-    PrimaryAxis, HumanwareType, LuckLabel, BaseStats
+    PrimaryAxis, HumanwareType, LuckLabel, BaseStats, Power, PowerTier
 } from '../types/fighter';
 
 // ─── Static Data ─────────────────────────────────────────────────────────────
 
 const SPECIES: Species[] = ['Human', 'Cyborg', 'Android'];
 
-const ORGS: OrgAffiliation[] = [
-    'Acheron', 'Minos', 'Cerberus', 'Lethe', 'Dis',
-    'Stygia', 'Malebolge', 'Cain', 'Tartarus', 'Unaligned'
-];
-
-// ~11–20 fighters will be Unaligned (assigned below in generateFighters)
 const ALIGNED_ORGS: OrgAffiliation[] = [
     'Acheron', 'Minos', 'Cerberus', 'Lethe', 'Dis',
     'Stygia', 'Malebolge', 'Cain', 'Tartarus'
@@ -110,7 +104,7 @@ const BACKSTORIES = [
     'The underdog everyone has already written off. Correctly, probably.',
 ];
 
-// ─── Org-to-TeamQuality base ranges ──────────────────────────────────────────
+// ─── Org TQ Ranges ───────────────────────────────────────────────────────────
 
 const ORG_TQ_RANGES: Record<OrgAffiliation, [number, number]> = {
     Acheron: [6, 9],
@@ -125,22 +119,121 @@ const ORG_TQ_RANGES: Record<OrgAffiliation, [number, number]> = {
     Unaligned: [1, 7],
 };
 
-// Org-to-TeamQuality mismatch notes (for 20% of fighters)
 const MISMATCH_NOTES_HIGH = [
-    'Poached from a rival org at the last minute — the new team hasn\'t meshed yet.',
+    "Poached from a rival org at the last minute — the new team hasn't meshed yet.",
     'Their previous team dissolved mid-season; this crew was assembled in a week.',
     'A sponsor controversy left them with a replacement team of uncertain quality.',
-    'Their operator has a grudge against the org lead — it shows in practice.',
-    'Brought in as a prestige pick; the support team didn\'t get a say.',
+    "Their operator has a grudge against the org lead — it shows in practice.",
+    "Brought in as a prestige pick; the support team didn't get a say.",
 ];
 
 const MISMATCH_NOTES_LOW = [
     'Their operator spent a decade in Tier-1 support and followed them here out of loyalty.',
     'A retired Premier-tier operator took this as a favor — and stayed.',
     'A ghost team operating under false org credentials; their real identity is Premier quality.',
-    'An independent crew with a reputation that far outstrips the fighter\'s seeding.',
+    "An independent crew with a reputation that far outstrips the fighter's seeding.",
     'The operator had beef with the org and came to prove a point.',
 ];
+
+// ─── Full Power Pool ──────────────────────────────────────────────────────────
+
+const POWER_POOL: Power[] = [
+    // ── Combat Passives ──────────────────────────────────────────────────────
+    { id: 'C1', name: 'Iron Lining', category: 'Combat', tier: 'Passive', mpCost: 0, recoverySeconds: 0, durationSeconds: -1, preFight: false, effect: 'Subdermal plating absorbs the first 2 points of physical damage from each strike; requires END ≥ 14.' },
+    { id: 'C2', name: 'Static Field', category: 'Combat', tier: 'Passive', mpCost: 0, recoverySeconds: 0, durationSeconds: -1, preFight: false, effect: 'Constant low-voltage discharge; opponents with LOG < 12 take −1 to digital attacks at contact range.' },
+    { id: 'C3', name: 'Overclock Passive', category: 'Combat', tier: 'Passive', mpCost: 0, recoverySeconds: 0, durationSeconds: -1, preFight: false, effect: 'Humanware runs 8% above rated speed — DEX effectively +1 for dodge, at the cost of slightly reduced MP recovery.' },
+    // ── Combat Minor ─────────────────────────────────────────────────────────
+    { id: 'C4', name: 'Burst Step', category: 'Combat', tier: 'Minor', mpCost: 3, recoverySeconds: 20, durationSeconds: 3, preFight: false, effect: 'Explosive 6–8m dash that bypasses one DEX-based dodge attempt; Ghost Feed shows as a motion-blur spike.' },
+    { id: 'C5', name: 'Pressure Strike', category: 'Combat', tier: 'Minor', mpCost: 4, recoverySeconds: 25, durationSeconds: 0, preFight: false, effect: 'Hydraulic amplification on one strike — effective STR +4 for that single blow.' },
+    { id: 'C6', name: 'Signal Noise', category: 'Combat', tier: 'Minor', mpCost: 2, recoverySeconds: 15, durationSeconds: 10, preFight: false, effect: 'Floods Ghost Feed with false data; opponent team loses −2 TQ on intrusion attempts for duration.' },
+    { id: 'C7', name: 'Reflex Overwrite', category: 'Combat', tier: 'Minor', mpCost: 5, recoverySeconds: 30, durationSeconds: 15, preFight: false, effect: 'Bypasses conscious motor control — Humanware moves the body faster than thought; DEX effectively +3 for dodge.' },
+    { id: 'C8', name: 'Pain Dampener', category: 'Combat', tier: 'Minor', mpCost: 3, recoverySeconds: 20, durationSeconds: 20, preFight: false, effect: 'Suppresses pain response for duration — fighter operates at full capability regardless of visible damage.' },
+    // ── Combat Moderate ──────────────────────────────────────────────────────
+    { id: 'C9', name: 'Adrenaline Spike', category: 'Combat', tier: 'Moderate', mpCost: 8, recoverySeconds: 60, durationSeconds: 30, preFight: false, effect: 'Synthetic adrenaline surge: STR +3, DEX +2 for 30 sec; crash effect: STR −1 for 60 sec after.' },
+    { id: 'C10', name: 'Armour Protocol', category: 'Combat', tier: 'Moderate', mpCost: 7, recoverySeconds: 45, durationSeconds: 25, preFight: false, effect: 'Ceramic sub-layers lock into position: END +4 for damage, DEX −2 for movement.' },
+    { id: 'C11', name: 'Kinetic Siphon', category: 'Combat', tier: 'Moderate', mpCost: 10, recoverySeconds: 90, durationSeconds: 40, preFight: false, effect: 'Harvests kinetic energy from incoming strikes — every hit taken restores 1 MP.' },
+    { id: 'C12', name: 'Neural Spike', category: 'Combat', tier: 'Moderate', mpCost: 9, recoverySeconds: 75, durationSeconds: 20, preFight: false, effect: 'Directed EMP-equivalent through physical contact forces 5 MP drain on opponent; INS check to partially resist.' },
+    { id: 'C13', name: 'Phantom Limb', category: 'Combat', tier: 'Moderate', mpCost: 6, recoverySeconds: 45, durationSeconds: 30, preFight: false, effect: "Projects a holographic ghost-image of a limb; opponent's next 2 strikes have 40% chance to target the phantom." },
+    { id: 'C14', name: 'Hardline', category: 'Combat', tier: 'Moderate', mpCost: 12, recoverySeconds: 90, durationSeconds: 45, preFight: false, effect: 'Routes all digital resources to physical: STR +4, END +3, LOG suppressed to 0 — Ghost Feed goes silent.' },
+    // ── Combat Major ─────────────────────────────────────────────────────────
+    { id: 'C15', name: 'Overdrive', category: 'Combat', tier: 'Major', mpCost: 15, recoverySeconds: 180, durationSeconds: 60, preFight: false, effect: 'STR +5, DEX +4, END +3; thermal throttling at 45 sec reduces bonuses to +3/+2/+1 for the final 15 sec.' },
+    { id: 'C16', name: 'Marrow Crush', category: 'Combat', tier: 'Major', mpCost: 18, recoverySeconds: 240, durationSeconds: 0, preFight: false, effect: 'Effective STR doubles for one devastating blow; thermal limiter auto-engages if this KOs the opponent.' },
+    { id: 'C17', name: 'Ghost Step', category: 'Combat', tier: 'Major', mpCost: 14, recoverySeconds: 150, durationSeconds: 45, preFight: false, effect: 'Near-invisibility on Arena Feed: DEX effectively +6 for dodge, opponent accuracy −30%; Ghost Feed sees the fighter clearly.' },
+    { id: 'C18', name: 'Dead Zone', category: 'Combat', tier: 'Major', mpCost: 17, recoverySeconds: 240, durationSeconds: 60, preFight: false, effect: "Localized EMP envelope: opponent team loses Ghost Feed access and system powers are suppressed; own team −3 TQ." },
+    { id: 'C19', name: 'Apex Fall', category: 'Combat', tier: 'Major', mpCost: 16, recoverySeconds: 180, durationSeconds: 30, preFight: false, effect: 'Every physical impact deals bonus damage equal to STR +4; stopping mid-charge requires END vs. opponent STR.' },
+    // ── Combat Signature ─────────────────────────────────────────────────────
+    { id: 'C20', name: 'Total Collapse', category: 'Combat', tier: 'Signature', mpCost: 25, recoverySeconds: 480, durationSeconds: 90, preFight: false, effect: 'STR +8, END +6, DEX +4; post-effect: all physical stats −3 for fight remainder — Ghost Feed shows structural stress in real time.' },
+    { id: 'C21', name: 'Coreline Strike', category: 'Combat', tier: 'Signature', mpCost: 22, recoverySeconds: 360, durationSeconds: 0, preFight: false, effect: "Targets opponent's Humanware trunk line: hit forces 15 MP drain and cancels their most recent power; requires visible 3-sec charge." },
+    { id: 'C22', name: 'Hollow', category: 'Combat', tier: 'Signature', mpCost: 28, recoverySeconds: 600, durationSeconds: 60, preFight: false, effect: 'Suppresses all pain, fear, and hesitation: STR +5, immune to psychological pressure and submission holds — Ghost Feed shows biometric flatline.' },
+    { id: 'C23', name: 'Full Burn', category: 'Combat', tier: 'Signature', mpCost: 24, recoverySeconds: 480, durationSeconds: 45, preFight: false, effect: 'All stats +4 simultaneously; after duration: no powers for 5 min, MP recovery halved for fight remainder.' },
+
+    // ── System Minor ─────────────────────────────────────────────────────────
+    { id: 'S1', name: 'Jam', category: 'System', tier: 'Minor', mpCost: 4, recoverySeconds: 20, durationSeconds: 12, preFight: false, effect: "Targeted interference on opponent's comm channel: team TQ −3 for duration." },
+    { id: 'S2', name: 'Cooldown Bleed', category: 'System', tier: 'Minor', mpCost: 5, recoverySeconds: 30, durationSeconds: 0, preFight: false, effect: "On hit: extends opponent's current power recovery window by 30 sec; INS check to partially resist." },
+    { id: 'S3', name: 'Feed Spoof', category: 'System', tier: 'Minor', mpCost: 3, recoverySeconds: 15, durationSeconds: 15, preFight: false, effect: 'Floods Ghost Feed with mirrored movement data: opponent team targeting −20% accuracy for duration.' },
+    // ── System Moderate ──────────────────────────────────────────────────────
+    { id: 'S4', name: 'Dampen', category: 'System', tier: 'Moderate', mpCost: 8, recoverySeconds: 60, durationSeconds: 35, preFight: false, effect: 'Reduces one identified opponent power currently in effect by 50%; TQ 7+ team can partially block.' },
+    { id: 'S5', name: 'Logic Burn', category: 'System', tier: 'Moderate', mpCost: 10, recoverySeconds: 75, durationSeconds: 0, preFight: false, effect: "Attacks opponent's LOG processor: instant 8 MP drain; if their MP is already < 10, forces 30-sec digital layer lockout." },
+    { id: 'S6', name: 'Feedback Loop', category: 'System', tier: 'Moderate', mpCost: 9, recoverySeconds: 60, durationSeconds: 25, preFight: false, effect: 'Reverses opponent power signals: if they activate a power during duration, they receive 4 MP blowback.' },
+    { id: 'S7', name: 'Sensor Blind', category: 'System', tier: 'Moderate', mpCost: 11, recoverySeconds: 90, durationSeconds: 40, preFight: false, effect: "Overloads opponent's sensory Humanware: INS effectively −5 for duration; invisible on Arena Feed." },
+    // ── System Major ─────────────────────────────────────────────────────────
+    { id: 'S8', name: 'System Crash', category: 'System', tier: 'Major', mpCost: 18, recoverySeconds: 240, durationSeconds: 60, preFight: false, effect: "Full OS intrusion (LOG vs. opponent INS): success disables all opponent powers for duration — Ghost Feed goes dark." },
+    { id: 'S9', name: 'Parasite Protocol', category: 'System', tier: 'Major', mpCost: 16, recoverySeconds: 180, durationSeconds: 45, preFight: false, effect: 'Embeds a draining signal: opponent loses 3 MP every 10 sec during duration — Ghost Feed shows a slow red pulse.' },
+    { id: 'S10', name: 'Mirror', category: 'System', tier: 'Major', mpCost: 14, recoverySeconds: 150, durationSeconds: 30, preFight: false, effect: "Copies opponent's last-used power at 60% effectiveness; requires LOG vs. opponent INS and sufficient MP." },
+    // ── System Signature ─────────────────────────────────────────────────────
+    { id: 'S11', name: 'Blackout', category: 'System', tier: 'Signature', mpCost: 27, recoverySeconds: 540, durationSeconds: 90, preFight: false, effect: 'Ghost Feed blackout for both fighters: no team support, no digital layer — pure physical fight until duration ends.' },
+    { id: 'S12', name: 'Deep Burn', category: 'System', tier: 'Signature', mpCost: 25, recoverySeconds: 480, durationSeconds: 0, preFight: false, effect: "Targets Humanware core (high LOG vs. INS): success drains all opponent MP instantly; resisted by INS 18+ or TQ 9+ teams." },
+
+    // ── Biological Passive ───────────────────────────────────────────────────
+    { id: 'B1', name: 'Shed', category: 'Biological', tier: 'Passive', mpCost: 0, recoverySeconds: 0, durationSeconds: -1, preFight: false, effect: 'Continuously emits low-density sensor chaff: INS-based targeting reads −1 accuracy at close range' },
+    { id: 'B2', name: 'Inoculate', category: 'Biological', tier: 'Passive', mpCost: 0, recoverySeconds: 0, durationSeconds: -1, preFight: false, effect: 'Fighter\'s systems are hardened against nanite attacks — all Biological category powers used against them are 30% less effective.' },
+    // ── Biological Minor ─────────────────────────────────────────────────────
+    { id: 'B3', name: 'Brand', category: 'Biological', tier: 'Minor', mpCost: 4, recoverySeconds: 25, durationSeconds: 45, preFight: false, effect: 'On successful strike: injects nanite marker — own team gains +2 TQ on all operations targeting that opponent; INS 14+ shortens duration.' },
+    // ── Biological Moderate ──────────────────────────────────────────────────
+    { id: 'B4', name: 'Contaminate', category: 'Biological', tier: 'Moderate', mpCost: 10, recoverySeconds: 90, durationSeconds: 60, preFight: false, effect: 'Nanite payload delivered through direct contact: opponent STR and END bonuses from active powers −2; 30-sec residual at −1 after.' },
+    { id: 'B5', name: 'Thread', category: 'Biological', tier: 'Moderate', mpCost: 9, recoverySeconds: 75, durationSeconds: 0, preFight: false, effect: 'Builds through proximity (within 3m): WIL −1 per 20 cumulative seconds (max −3); resets if opponent exits range for 15 sec.' },
+    // ── Biological Major ─────────────────────────────────────────────────────
+    { id: 'B6', name: 'Wither', category: 'Biological', tier: 'Major', mpCost: 16, recoverySeconds: 210, durationSeconds: 90, preFight: false, effect: 'Full-spectrum nanite injection via 2-sec held grapple: all active/passive combat power stat bonuses halved; 60-sec recovery phase at 50%.' },
+    // ── Biological Signature ─────────────────────────────────────────────────
+    { id: 'B7', name: 'Gray', category: 'Biological', tier: 'Signature', mpCost: 26, recoverySeconds: 540, durationSeconds: 120, preFight: false, effect: 'Nanite cloud in 4m radius: opponents accumulate 1 STR/END degradation per 15 sec (max −4/−4) — degradation is permanent for the fight.' },
+
+    // ── Preparation Passive ──────────────────────────────────────────────────
+    { id: 'P1', name: 'Ledger', category: 'Preparation', tier: 'Passive', mpCost: 0, recoverySeconds: 0, durationSeconds: -1, preFight: false, effect: 'Archives behavioral data throughout the fight: +1 LOG per 60 sec of fight time (max +3); team gains +1 TQ after 2 minutes.' },
+    // ── Preparation Moderate ─────────────────────────────────────────────────
+    { id: 'P2', name: 'Confession', category: 'Preparation', tier: 'Moderate', mpCost: 8, recoverySeconds: 0, durationSeconds: -1, preFight: true, effect: 'Pre-fight meditative observation: INS +3 for first 90 sec of fight; first unseen opponent power auto-identifies on Ghost Feed.' },
+    { id: 'P3', name: 'Redact', category: 'Preparation', tier: 'Moderate', mpCost: 7, recoverySeconds: 90, durationSeconds: 30, preFight: false, effect: "Purges 30 sec of own Ghost Feed signature data — opponent team's TQ-based operations lose −3 for duration." },
+    // ── Preparation Major ────────────────────────────────────────────────────
+    { id: 'P4', name: 'Bind', category: 'Preparation', tier: 'Major', mpCost: 15, recoverySeconds: 0, durationSeconds: -1, preFight: true, effect: 'Pre-fight exploit: embeds conditional that doubles MP cost the next time opponent activates a chosen power tier; TQ 8+ team can remove it for 6 MP.' },
+    { id: 'P5', name: 'Mark', category: 'Preparation', tier: 'Major', mpCost: 14, recoverySeconds: 0, durationSeconds: -1, preFight: true, effect: "Pre-fight custom exploit: first activation of the marked opponent power costs 4 MP instead of standard and fires with +4 LOG; wasted if opponent never uses it." },
+];
+
+// ─── Org Power Tendency Weights ───────────────────────────────────────────────
+// Each entry is a list of power IDs this org favours.
+// Selection algorithm: pick from favourites with 70% probability, full pool 30%.
+
+const ORG_POWER_FAVOURITES: Record<OrgAffiliation, string[]> = {
+    Acheron: ['C2', 'C3', 'C7', 'C8', 'C10', 'C22', 'S4', 'S3', 'S6', 'P2'],
+    Minos: ['C2', 'C3', 'C4', 'C5', 'C9', 'C23', 'S1', 'S3', 'B5'],
+    Cerberus: ['C1', 'C3', 'C5', 'C9', 'C10', 'C14', 'C15', 'C16', 'C18', 'C20', 'C22'],
+    Lethe: ['C4', 'C7', 'C13', 'C17', 'S3', 'S10', 'S11', 'P3'],
+    Dis: ['C1', 'C11', 'C10', 'C9', 'C15', 'C19', 'C14', 'C20', 'C18', 'S9'],
+    Stygia: ['C3', 'C2', 'C10', 'C8', 'C14', 'S5', 'S6', 'S9', 'S12', 'P4'],
+    Malebolge: ['C2', 'C3', 'C10', 'C8', 'S3', 'S8', 'S9', 'S10', 'S12', 'P1'],
+    Cain: ['C3', 'C4', 'C5', 'C7', 'C17', 'C21', 'S2', 'B3', 'P5'],
+    Tartarus: ['C3', 'C12', 'C20', 'C21', 'S8', 'B1', 'B2', 'B4', 'B5', 'B6', 'B7'],
+    Unaligned: [], // no tendency — fully random from eligible pool
+};
+
+// ─── Tier eligibility by Humanware type ──────────────────────────────────────
+// T3: up to Major for its single power slot
+// T4: first power up to Major, second power can be Signature
+const TIER_ORDER: PowerTier[] = ['Passive', 'Minor', 'Moderate', 'Major', 'Signature'];
+
+function tierIndex(t: PowerTier): number { return TIER_ORDER.indexOf(t); }
+
+function tierValue(t: PowerTier): number {
+    return { Passive: 2, Minor: 4, Moderate: 8, Major: 12, Signature: 18 }[t] ?? 4;
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -156,7 +249,7 @@ function roll2d10(): number {
     return randomInt(1, 10) + randomInt(1, 10);
 }
 
-function luckLabel(value: number): string {
+function luckLabel(value: number): LuckLabel {
     if (value <= 5) return 'Cursed';
     if (value <= 9) return 'Unlucky';
     if (value <= 13) return 'Neutral';
@@ -164,60 +257,74 @@ function luckLabel(value: number): string {
     return 'Fated';
 }
 
-function powerTierValue(tier: string): number {
-    const map: Record<string, number> = {
-        Passive: 1, Minor: 3, Moderate: 6, Major: 10, Signature: 15
-    };
-    return map[tier] ?? 3;
+function assignPowers(org: OrgAffiliation, hwType: HumanwareType): Power[] {
+    const slots = hwType === 4 ? 2 : 1;
+    const favourites = ORG_POWER_FAVOURITES[org];
+    const assigned: Power[] = [];
+    const usedIds = new Set<string>();
+
+    for (let slot = 0; slot < slots; slot++) {
+        // Slot 0: max tier = Major; Slot 1 (T4 only): max tier = Signature
+        const maxTierIdx = slot === 0 ? tierIndex('Major') : tierIndex('Signature');
+        const eligible = POWER_POOL.filter(
+            p => tierIndex(p.tier) <= maxTierIdx && !usedIds.has(p.id)
+        );
+
+        let pool: Power[];
+        if (favourites.length > 0 && Math.random() < 0.70) {
+            // Pick from org favourites (filtered to eligible)
+            const favEligible = eligible.filter(p => favourites.includes(p.id));
+            pool = favEligible.length > 0 ? favEligible : eligible;
+        } else {
+            pool = eligible;
+        }
+
+        const pick = randomItem(pool);
+        assigned.push(pick);
+        usedIds.add(pick.id);
+    }
+
+    return assigned;
 }
 
-function calcOfficialScore(stats: BaseStats, hwType: HumanwareType, tq: number): number {
+function calcOfficialScore(
+    stats: BaseStats,
+    hwType: HumanwareType,
+    tq: number,
+    powers: Power[]
+): number {
     const physComp = stats.strength + stats.dexterity + stats.endurance;
     const digComp = stats.logic + stats.instinct + stats.willpower;
     const hwBonus = hwType === 4 ? 20 : 10;
-    // Phase 2 will add power tier values; using a default Major (10) placeholder
-    const powerBonus = hwType === 4 ? 10 + 6 : 10; // placeholder: one Major + one Moderate for T4
+    const powerBonus = powers.reduce((sum, p) => sum + tierValue(p.tier), 0);
     return physComp + digComp + hwBonus + powerBonus + (tq * 4);
 }
 
-function distributeStats(
-    axis: PrimaryAxis,
-    hwType: HumanwareType
-): BaseStats {
+function distributeStats(axis: PrimaryAxis, hwType: HumanwareType): BaseStats {
     const bonusPoints = hwType === 4 ? 16 : 10;
-    const maxPerStat = 8; // max from Humanware per stat
+    const maxBonus = 8;
 
-    // Base stats all start at 10
     const stats: BaseStats = {
-        strength: 10,
-        dexterity: 10,
-        endurance: 10,
-        logic: 10,
-        instinct: 10,
-        willpower: 10,
+        strength: 10, dexterity: 10, endurance: 10,
+        logic: 10, instinct: 10, willpower: 10,
     };
 
-    const physStats: (keyof BaseStats)[] = ['strength', 'dexterity', 'endurance'];
-    const digStats: (keyof BaseStats)[] = ['logic', 'instinct', 'willpower'];
+    const physKeys: (keyof BaseStats)[] = ['strength', 'dexterity', 'endurance'];
+    const digKeys: (keyof BaseStats)[] = ['logic', 'instinct', 'willpower'];
 
-    // ~60% of bonus to primary axis, remainder to secondary
     let primaryPool: number;
     let primaryKeys: (keyof BaseStats)[];
     let secondaryKeys: (keyof BaseStats)[];
 
     if (axis === 'Physical') {
         primaryPool = Math.round(bonusPoints * 0.6);
-        primaryKeys = physStats;
-        secondaryKeys = digStats;
+        primaryKeys = physKeys; secondaryKeys = digKeys;
     } else if (axis === 'Digital') {
         primaryPool = Math.round(bonusPoints * 0.6);
-        primaryKeys = digStats;
-        secondaryKeys = physStats;
+        primaryKeys = digKeys; secondaryKeys = physKeys;
     } else {
-        // Balanced — split evenly
         primaryPool = Math.round(bonusPoints * 0.5);
-        primaryKeys = physStats;
-        secondaryKeys = digStats;
+        primaryKeys = physKeys; secondaryKeys = digKeys;
     }
 
     const secondaryPool = bonusPoints - primaryPool;
@@ -226,17 +333,12 @@ function distributeStats(
         let remaining = pool;
         while (remaining > 0) {
             const key = randomItem(keys);
-            const currentBonus = stats[key] - 10;
-            if (currentBonus < maxPerStat) {
-                stats[key]++;
-                remaining--;
-            }
+            if (stats[key] - 10 < maxBonus) { stats[key]++; remaining--; }
         }
     }
 
     distribute(primaryPool, primaryKeys);
     distribute(secondaryPool, secondaryKeys);
-
     return stats;
 }
 
@@ -254,29 +356,27 @@ export function generateFighter(id: string, org?: OrgAffiliation): Fighter {
     const mp = stats.willpower * 2;
 
     const luckValue = roll2d10();
-    const label = luckLabel(luckValue) as Fighter['luckLabel'];
+    const label = luckLabel(luckValue);
 
     const assignedOrg: OrgAffiliation = org ?? 'Unaligned';
     const [tqMin, tqMax] = ORG_TQ_RANGES[assignedOrg];
     let tq = randomInt(tqMin, tqMax);
     let teamNote = '';
 
-    // 20% mismatch rule
     const isMismatch = Math.random() < 0.2;
     if (isMismatch) {
         const expectedMid = Math.round((tqMin + tqMax) / 2);
         if (tq >= expectedMid) {
-            // Flip to low
             tq = randomInt(1, Math.max(1, tqMin - 1));
             teamNote = randomItem(MISMATCH_NOTES_HIGH);
         } else {
-            // Flip to high
             tq = randomInt(Math.min(10, tqMax + 1), 10);
             teamNote = randomItem(MISMATCH_NOTES_LOW);
         }
     }
 
-    const officialScore = calcOfficialScore(stats, hwType, tq);
+    const powers = assignPowers(assignedOrg, hwType);
+    const officialScore = calcOfficialScore(stats, hwType, tq, powers);
 
     return {
         id,
@@ -298,8 +398,10 @@ export function generateFighter(id: string, org?: OrgAffiliation): Fighter {
         luckLabel: label,
         teamQuality: tq,
         teamNote,
+        powers,
+        powerSlots: hwType === 4 ? 2 : 1,
         officialScore,
-        rank: 0, // will be sorted + assigned after all 128 are generated
+        rank: 0,
         wins: 0,
         losses: 0,
         isEliminated: false,
@@ -307,22 +409,15 @@ export function generateFighter(id: string, org?: OrgAffiliation): Fighter {
 }
 
 export function generateFighters(count: number = 128): Fighter[] {
-    // Assign org affiliations: 9 orgs × ~13 fighters, rest Unaligned (~11)
     const orgs: OrgAffiliation[] = [];
-    const fightersPerOrg = Math.floor((count * 0.9) / ALIGNED_ORGS.length); // ~13
+    const fightersPerOrg = Math.floor((count * 0.9) / ALIGNED_ORGS.length);
 
     for (const org of ALIGNED_ORGS) {
-        for (let i = 0; i < fightersPerOrg; i++) {
-            orgs.push(org);
-        }
+        for (let i = 0; i < fightersPerOrg; i++) orgs.push(org);
     }
+    while (orgs.length < count) orgs.push('Unaligned');
 
-    // Fill remaining slots as Unaligned
-    while (orgs.length < count) {
-        orgs.push('Unaligned');
-    }
-
-    // Shuffle org assignments
+    // Shuffle
     for (let i = orgs.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [orgs[i], orgs[j]] = [orgs[j], orgs[i]];
@@ -333,11 +428,8 @@ export function generateFighters(count: number = 128): Fighter[] {
         fighters.push(generateFighter(`fighter-${i + 1}`, orgs[i]));
     }
 
-    // Sort by Official Score descending and assign seed ranks
     fighters.sort((a, b) => b.officialScore - a.officialScore);
-    fighters.forEach((f, idx) => {
-        f.rank = idx + 1;
-    });
+    fighters.forEach((f, idx) => { f.rank = idx + 1; });
 
     return fighters;
 }

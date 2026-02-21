@@ -32,6 +32,24 @@ export type FightingStyle =
 
 export type StoryType = 'fight' | 'rest' | 'preparation' | 'interaction';
 
+// ─── Powers ──────────────────────────────────────────────────────────────────
+
+export type PowerCategory = 'Combat' | 'System' | 'Biological' | 'Preparation';
+
+export type PowerTier = 'Passive' | 'Minor' | 'Moderate' | 'Major' | 'Signature';
+
+export interface Power {
+  id: string;           // e.g. 'C1', 'S4', 'B3', 'P2'
+  name: string;
+  category: PowerCategory;
+  tier: PowerTier;
+  mpCost: number;       // 0 for Passives and pre-fight Preparation powers
+  recoverySeconds: number; // 0 for Passives
+  durationSeconds: number; // 0 for instant
+  effect: string;       // one-sentence summary for story prompts
+  preFight: boolean;    // Preparation powers activated before fight
+}
+
 // ─── Origin Worlds (cyberpunk / sci-fi) ──────────────────────────────────────
 
 export type OriginWorld =
@@ -100,6 +118,10 @@ export interface Fighter {
   // Team
   teamQuality: number;  // 1–10
   teamNote: string;     // one sentence
+
+  // Powers
+  powers: Power[];      // 1 power for T3, 2 for T4
+  powerSlots: number;   // 1 or 2
 
   // Tournament
   officialScore: number;
