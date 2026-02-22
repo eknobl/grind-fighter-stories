@@ -342,6 +342,228 @@ function distributeStats(axis: PrimaryAxis, hwType: HumanwareType): BaseStats {
     return stats;
 }
 
+// ─── Canon Fighter Helpers ──────────────────────────────────────────────────────
+
+function getPower(id: string): Power {
+    const p = POWER_POOL.find(p => p.id === id);
+    if (!p) throw new Error(`Unknown power id: ${id}`);
+    return p;
+}
+
+// ─── Canon Fighter Definitions ──────────────────────────────────────────────────
+//
+// BRACKET MATH (standard balanced 128-player single-elimination):
+//   R1 pairs: seed X vs seed (129-X).
+//   R2 pod: R1-pair k pairs with R1-pair (65-k).
+//   R3 pod: R2-pod k pairs with R2-pod (33-k).
+//   R4 pod: R3-pod k pairs with R3-pod (17-k).
+//   R5 pod: R4-pod k pairs with R4-pod (9-k).
+//   R6 pod: R5-pod k pairs with R5-pod (5-k).
+//   R7 (Final): R6-pod 1 vs R6-pod 2.
+//
+//   Beatrix = seed 126:
+//     R1: 129-126=3         → Rauk      seed 3
+//     R2: R1-pair 62={62,67}→ Troika    seed 62
+//     R3: R2-pod30={30,99,35,94} → Malatesta seed 30
+//     R4: R3-pod14={14,115,51,78,...} → Jaeger  seed 14
+//     R5: R4-pod6 ={6,123,59,70,...} → Tarasque seed 6
+//     R6: R5-pod2 contains seed 2   → Kuzima   seed 2
+//     R7: opposite half              → Charon   seed 1
+//
+// Canon seeds are fixed by narrative. OfficialScore reflects fight capability
+// only and does NOT determine bracket placement for these 8 fighters.
+
+interface CanonFighterDef {
+    id: string;
+    seed: number;
+    name: string;
+    species: Species;
+    origin: OriginWorld;
+    org: OrgAffiliation;
+    fightingStyle: FightingStyle;
+    signatureMove: string;
+    backstory: string;
+    motivation: string;
+    personality: string;
+    stats: BaseStats;
+    humanwareType: HumanwareType;
+    primaryAxis: PrimaryAxis;
+    luck: number;
+    luckLabel: LuckLabel;
+    teamQuality: number;
+    teamNote: string;
+    powerIds: string[];
+}
+
+const CANON_FIGHTER_DEFS: CanonFighterDef[] = [
+    // Charon — seed 1 — Acheron champion — T4 Digital
+    // Stats: phys bonus 0+3+3=6, dig bonus 3+5+2=10, total=16 ✓
+    {
+        id: 'canon-charon', seed: 1,
+        name: 'Charon',
+        species: 'Human', origin: 'The Undercroft', org: 'Acheron',
+        fightingStyle: 'Technical', signatureMove: 'Final Clause',
+        backstory: 'Undefeated in Circle 1 for three consecutive tournaments. His record is not public — Acheron sealed it.',
+        motivation: 'The tournament is maintenance. He already won.',
+        personality: 'Speaks rarely. When he does, the room adjusts.',
+        stats: { strength: 10, dexterity: 13, endurance: 13, logic: 13, instinct: 15, willpower: 12 },
+        humanwareType: 4, primaryAxis: 'Digital',
+        luck: 17, luckLabel: 'Fortunate',
+        teamQuality: 9, teamNote: '',
+        powerIds: ['S4', 'S12'],
+    },
+    // Kuzima — seed 2 — Dis powerhouse — T4 Physical
+    // Stats: phys bonus 8+0+2=10, dig bonus 2+0+4=6, total=16 ✓
+    {
+        id: 'canon-kuzima', seed: 2,
+        name: 'Kuzima',
+        species: 'Cyborg', origin: 'Rust Belt', org: 'Dis',
+        fightingStyle: 'Brutal', signatureMove: 'Pressure Breach',
+        backstory: 'Dis built him over six years for this bracket. He has never been told he can lose.',
+        motivation: 'Every fight is a proof of concept for Dis manufacturing.',
+        personality: "Methodical. Doesn't talk during fights. Doesn't need to.",
+        stats: { strength: 18, dexterity: 10, endurance: 12, logic: 12, instinct: 10, willpower: 14 },
+        humanwareType: 4, primaryAxis: 'Physical',
+        luck: 15, luckLabel: 'Fortunate',
+        teamQuality: 9, teamNote: '',
+        powerIds: ['C16', 'C20'],
+    },
+    // Rauk — seed 3 — Acheron precision striker — T4 Balanced
+    // Stats: phys bonus 4+2+2=8, dig bonus 4+2+2=8, total=16 ✓
+    {
+        id: 'canon-rauk', seed: 3,
+        name: 'Rauk One-Eye',
+        species: 'Human', origin: 'Neon City', org: 'Acheron',
+        fightingStyle: 'Technical', signatureMove: 'Null Convergence',
+        backstory: 'Lost his left eye in Circle 3 eight years ago. Refused the replacement. Says the blindspot keeps him honest.',
+        motivation: 'He owes Acheron a win. He always pays his debts.',
+        personality: 'Measured and deliberate. Watching him warm up feels like watching someone pray.',
+        stats: { strength: 14, dexterity: 12, endurance: 12, logic: 14, instinct: 12, willpower: 12 },
+        humanwareType: 4, primaryAxis: 'Balanced',
+        luck: 12, luckLabel: 'Neutral',
+        teamQuality: 7, teamNote: '',
+        powerIds: ['C7', 'C22'],
+    },
+    // Tarasque — seed 6 — Tartarus biological horror — T3 Physical
+    // Stats: phys bonus 2+0+8=10, dig bonus 0, total=10 ✓ (T3)
+    // Seed 6 reflects Tartarus tournament record; OfficialScore is lower by formula.
+    {
+        id: 'canon-tarasque', seed: 6,
+        name: 'Tarasque',
+        species: 'Cyborg', origin: 'Cauldron', org: 'Tartarus',
+        fightingStyle: 'Aggressive', signatureMove: 'Gray Embrace',
+        backstory: 'Left the Tartarus labs with seventeen unregistered biological modifications. The committee noted nine of them.',
+        motivation: 'Tartarus wants data on high-end opponents under biological stress. Tarasque is the instrument.',
+        personality: 'Genuinely curious. Asks questions during fights that make opponents deeply uncomfortable.',
+        stats: { strength: 12, dexterity: 10, endurance: 18, logic: 10, instinct: 10, willpower: 10 },
+        humanwareType: 3, primaryAxis: 'Physical',
+        luck: 8, luckLabel: 'Unlucky',
+        teamQuality: 5, teamNote: 'Tartarus research team — more interested in collecting data than winning.',
+        powerIds: ['B6'],
+    },
+    // Jaeger — seed 14 — Malebolge system architect — T3 Digital
+    // Stats: phys bonus 0+0+4=4, dig bonus 6+0+0=6, total=10 ✓ (T3)
+    {
+        id: 'canon-jaeger', seed: 14,
+        name: 'Jaeger',
+        species: 'Android', origin: 'Vertex', org: 'Malebolge',
+        fightingStyle: 'Tactical', signatureMove: 'Hostile Acquisition',
+        backstory: "Former Malebolge infrastructure architect. Entered the bracket when his audit of the tournament's Ghost Feed exposed exploits he decided to use personally.",
+        motivation: "He invested in the Ghost Feed infrastructure. He's here to collect the return.",
+        personality: 'Polite in the way that large institutions are polite — completely and without warmth.',
+        stats: { strength: 10, dexterity: 10, endurance: 14, logic: 16, instinct: 10, willpower: 10 },
+        humanwareType: 3, primaryAxis: 'Digital',
+        luck: 13, luckLabel: 'Neutral',
+        teamQuality: 7, teamNote: '',
+        powerIds: ['S8'],
+    },
+    // Malatesta — seed 30 — Minos chaos agent — T3 Physical
+    // Stats: phys bonus 4+2+0=6, dig bonus 0+0+4=4, total=10 ✓ (T3)
+    {
+        id: 'canon-malatesta', seed: 30,
+        name: 'Malatesta',
+        species: 'Human', origin: 'The Sprawl', org: 'Minos',
+        fightingStyle: 'Aggressive', signatureMove: 'Impact Loop',
+        backstory: 'Qualified through the open bracket three times. Minos finally sponsored him when he hospitalized two seeded fighters in R1.',
+        motivation: "He loves this. That's the entire motivation.",
+        personality: 'Loud before the fight. Completely silent during it. The contrast is disturbing.',
+        stats: { strength: 14, dexterity: 12, endurance: 10, logic: 10, instinct: 10, willpower: 14 },
+        humanwareType: 3, primaryAxis: 'Physical',
+        luck: 10, luckLabel: 'Neutral',
+        teamQuality: 6, teamNote: '',
+        powerIds: ['C9'],
+    },
+    // Troika — seed 62 — Cerberus tank — T3 Physical
+    // Stats: phys bonus 4+0+2=6, dig bonus 0+2+2=4, total=10 ✓ (T3)
+    {
+        id: 'canon-troika', seed: 62,
+        name: 'Troika',
+        species: 'Human', origin: 'Irongate', org: 'Cerberus',
+        fightingStyle: 'Defensive', signatureMove: 'Carbon Slam',
+        backstory: 'Dis trained, Cerberus recruited. His previous team was rotated out after he survived a fight they declared lost at the 30-second mark.',
+        motivation: "He is here because Cerberus put him here. He doesn't ask questions.",
+        personality: 'Quiet, consistent, and impossible to rattle. Cerberus fighters train for this.',
+        stats: { strength: 14, dexterity: 10, endurance: 12, logic: 10, instinct: 12, willpower: 12 },
+        humanwareType: 3, primaryAxis: 'Physical',
+        luck: 11, luckLabel: 'Neutral',
+        teamQuality: 6, teamNote: '',
+        powerIds: ['C10'],
+    },
+    // Beatrix — seed 126 — the protagonist — T4 Physical
+    // Stats: phys bonus 8+0+2=10, dig bonus 0+0+6=6, total=16 ✓
+    // Seed 126 reflects TQ 5 + Unaligned status; raw stats are elite tier.
+    // Hulk Mode (Type 5) activates outside of normal power pool parameters.
+    {
+        id: 'canon-beatrix', seed: 126,
+        name: 'Beatrix',
+        species: 'Cyborg', origin: 'Sector Zero', org: 'Unaligned',
+        fightingStyle: 'Aggressive', signatureMove: 'Full Overload',
+        backstory: "Qualified through the open bracket on raw stat variance. No org. No team history. The Ghost Feed analytics flagged her Humanware as 'unclassified' — twice.",
+        motivation: "She doesn't explain herself.",
+        personality: 'Direct to the point of being rude. Has a reputation for finishing faster than the Ghost Feed can process.',
+        stats: { strength: 18, dexterity: 10, endurance: 12, logic: 10, instinct: 10, willpower: 16 },
+        humanwareType: 4, primaryAxis: 'Physical',
+        luck: 18, luckLabel: 'Fortunate',
+        teamQuality: 5, teamNote: 'Independent operator — ad hoc crew assembled 48 hours before the tournament.',
+        powerIds: ['C9', 'C15'],
+    },
+];
+
+const CANON_SEEDS = new Set(CANON_FIGHTER_DEFS.map(d => d.seed));
+
+function buildCanonFighter(def: CanonFighterDef): Fighter {
+    const powers = def.powerIds.map(getPower);
+    const stats = def.stats;
+    return {
+        id: def.id,
+        name: def.name,
+        species: def.species,
+        origin: def.origin,
+        org: def.org,
+        fightingStyle: def.fightingStyle,
+        signatureMove: def.signatureMove,
+        backstory: def.backstory,
+        motivation: def.motivation,
+        personality: def.personality,
+        stats,
+        hp: stats.endurance * 2,
+        mp: stats.willpower * 2,
+        humanwareType: def.humanwareType,
+        primaryAxis: def.primaryAxis,
+        luck: def.luck,
+        luckLabel: def.luckLabel,
+        teamQuality: def.teamQuality,
+        teamNote: def.teamNote,
+        powers,
+        powerSlots: def.powerIds.length,
+        officialScore: calcOfficialScore(stats, def.humanwareType, def.teamQuality, powers),
+        rank: def.seed,
+        wins: 0,
+        losses: 0,
+        isEliminated: false,
+    };
+}
+
 // ─── Main Generator ───────────────────────────────────────────────────────────
 
 export function generateFighter(id: string, org?: OrgAffiliation): Fighter {
@@ -409,27 +631,36 @@ export function generateFighter(id: string, org?: OrgAffiliation): Fighter {
 }
 
 export function generateFighters(count: number = 128): Fighter[] {
-    const orgs: OrgAffiliation[] = [];
-    const fightersPerOrg = Math.floor((count * 0.9) / ALIGNED_ORGS.length);
+    // Build canon fighters with fixed seeds
+    const canonFighters = CANON_FIGHTER_DEFS.map(buildCanonFighter);
 
+    // Generate random fighters for the remaining seed slots
+    const randomCount = count - canonFighters.length;
+
+    const orgs: OrgAffiliation[] = [];
+    const fightersPerOrg = Math.floor((randomCount * 0.9) / ALIGNED_ORGS.length);
     for (const org of ALIGNED_ORGS) {
         for (let i = 0; i < fightersPerOrg; i++) orgs.push(org);
     }
-    while (orgs.length < count) orgs.push('Unaligned');
+    while (orgs.length < randomCount) orgs.push('Unaligned');
 
-    // Shuffle
     for (let i = orgs.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [orgs[i], orgs[j]] = [orgs[j], orgs[i]];
     }
 
-    const fighters: Fighter[] = [];
-    for (let i = 0; i < count; i++) {
-        fighters.push(generateFighter(`fighter-${i + 1}`, orgs[i]));
+    const randomFighters: Fighter[] = [];
+    for (let i = 0; i < randomCount; i++) {
+        randomFighters.push(generateFighter(`fighter-${i + 1}`, orgs[i]));
     }
 
-    fighters.sort((a, b) => b.officialScore - a.officialScore);
-    fighters.forEach((f, idx) => { f.rank = idx + 1; });
+    // Sort random fighters by OfficialScore and assign to remaining seed slots
+    randomFighters.sort((a, b) => b.officialScore - a.officialScore);
+    const availableSeeds = Array.from({ length: count }, (_, i) => i + 1)
+        .filter(s => !CANON_SEEDS.has(s));
+    randomFighters.forEach((f, idx) => { f.rank = availableSeeds[idx] ?? count; });
 
-    return fighters;
+    const result = [...canonFighters, ...randomFighters];
+    result.sort((a, b) => a.rank - b.rank);
+    return result;
 }
