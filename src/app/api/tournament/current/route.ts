@@ -25,11 +25,10 @@ export async function GET() {
             const newTournament = await db.insert(tournaments).values({}).returning({ id: tournaments.id });
             tournamentId = newTournament[0].id;
 
-            // 3. Generate fighters
+            // 3. Generate fighters (already sorted rank 1..128 by generateFighters)
             const newFighters = generateFighters(128);
 
-            // 4. Insert fighters
-            // Drizzle insert many
+            // 4. Insert fighters in rank order so insertedFighters[i] = rank i+1
             const insertedFighters = await db.insert(fighters).values(
                 newFighters.map(f => ({
                     name: f.name,
@@ -37,21 +36,30 @@ export async function GET() {
                     tournamentId: tournamentId,
                     status: 'active'
                 }))
-            ).returning({ id: fighters.id }); // We need IDs to link matches
+            ).returning({ id: fighters.id });
 
-            // 5. Generate Round 1 Matches
-            // Simple sequential pairing for now: 1 vs 2, 3 vs 4, etc.
-            const round1Matches: any[] = [];
-            for (let i = 0; i < insertedFighters.length; i += 2) {
-                if (i + 1 < insertedFighters.length) {
-                    round1Matches.push({
-                        tournamentId,
-                        round: 1,
-                        matchOrder: i / 2,
-                        fighter1Id: insertedFighters[i].id,
-                        fighter2Id: insertedFighters[i + 1].id,
-                    });
-                }
+            // 5. Generate Round 1 Matches using balanced bracket seeding:
+            //    Match k pairs rank k vs rank (129-k), for k = 1..64.
+            //    insertedFighters[k-1] = rank k (because we inserted in rank order).
+            const round1Matches: {
+                tournamentId: number;
+                round: number;
+                matchOrder: number;
+                fighter1Id: number;
+                fighter2Id: number;
+            }[] = [];
+
+            const n = insertedFighters.length; // 128
+            for (let k = 1; k <= n / 2; k++) {
+                const seedA = k;           // e.g. 1, 2, 3 ...
+                const seedB = n + 1 - k;   // e.g. 128, 127, 126 ...
+                round1Matches.push({
+                    tournamentId,
+                    round: 1,
+                    matchOrder: k - 1,     // 0-indexed
+                    fighter1Id: insertedFighters[seedA - 1].id,
+                    fighter2Id: insertedFighters[seedB - 1].id,
+                });
             }
 
             if (round1Matches.length > 0) {

@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { Fighter } from '@/types/fighter';
-import { generateFighters } from '@/lib/generateFighters';
 import { FighterCard } from '@/components/FighterCard';
 import { StoryGenerator } from '@/components/StoryGenerator';
 import { TournamentBracket } from '@/components/TournamentBracket';
@@ -16,6 +15,7 @@ export default function Home() {
     const [selectedFighters, setSelectedFighters] = useState<Fighter[]>([]);
     const [activeMatch, setActiveMatch] = useState<any | null>(null);
     const [editingFighter, setEditingFighter] = useState<Fighter | null>(null);
+    const [loadError, setLoadError] = useState<string | null>(null);
     const [focusedIndex, setFocusedIndex] = useState(-1);
 
     useEffect(() => {
@@ -23,16 +23,15 @@ export default function Home() {
             try {
                 const res = await fetch('/api/tournament/current');
                 const data = await res.json();
-                if (data.fighters) {
-                    setFighters(data.fighters);
+                if (data.error && !data.fighters) {
+                    setLoadError(data.error);
+                    return;
                 }
-                if (data.matches) {
-                    setMatches(data.matches);
-                }
+                if (data.fighters) setFighters(data.fighters);
+                if (data.matches) setMatches(data.matches);
             } catch (e) {
-                console.error("Failed to fetch tournament data", e);
-                // Fallback
-                setFighters(generateFighters(128));
+                console.error('Failed to fetch tournament data', e);
+                setLoadError('Could not connect to tournament server.');
             }
         };
         fetchTournamentData();
