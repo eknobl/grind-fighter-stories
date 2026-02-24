@@ -29,7 +29,7 @@ export default function LandingPage() {
         }
         .nmc-header {
           text-align: center;
-          padding: 90px 24px 56px;
+          padding: 24px 24px 56px;
         }
         .nmc-logo-wrap {
           position: relative;
@@ -99,8 +99,10 @@ export default function LandingPage() {
           display: flex;
           justify-content: center;
           gap: 32px;
-          padding-top: 24px;
-          margin-bottom: -32px;
+          padding-top: 28px;
+          margin-bottom: 32px;
+          position: relative;
+          z-index: 10;
         }
         .nmc-nav-link {
           font-family: var(--font-mono-nmc), monospace;

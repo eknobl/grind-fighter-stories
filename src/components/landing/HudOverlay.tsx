@@ -1,17 +1,17 @@
 'use client';
 
 interface HudOverlayProps {
-    onlineCount: number;
-    cursorPos: { x: number; y: number };
+  onlineCount: number;
+  cursorPos: { x: number; y: number };
 }
 
 export default function HudOverlay({ onlineCount, cursorPos }: HudOverlayProps) {
-    const px = String(Math.round(cursorPos.x)).padStart(4, '0');
-    const py = String(Math.round(cursorPos.y)).padStart(4, '0');
+  const px = String(Math.round(cursorPos.x)).padStart(4, '0');
+  const py = String(Math.round(cursorPos.y)).padStart(4, '0');
 
-    return (
-        <>
-            <style>{`
+  return (
+    <>
+      <style>{`
         .hud-scanlines {
           position: fixed;
           inset: 0;
@@ -78,7 +78,7 @@ export default function HudOverlay({ onlineCount, cursorPos }: HudOverlayProps) 
           font-family: var(--font-mono-nmc), monospace;
           font-size: 9px;
           letter-spacing: 2px;
-          color: rgba(232,232,232,0.18);
+          color: rgba(232,232,232,0.10);
           text-transform: uppercase;
           white-space: nowrap;
         }
@@ -98,28 +98,28 @@ export default function HudOverlay({ onlineCount, cursorPos }: HudOverlayProps) 
         }
       `}</style>
 
-            <div className="hud-scanlines" />
-            <div className="hud-vignette" />
+      <div className="hud-scanlines" />
+      <div className="hud-vignette" />
 
-            {/* Corner brackets */}
-            <div className="hud-corner tl" />
-            <div className="hud-corner tr" />
-            <div className="hud-corner bl" />
-            <div className="hud-corner br" />
+      {/* Corner brackets */}
+      <div className="hud-corner tl" />
+      <div className="hud-corner tr" />
+      <div className="hud-corner bl" />
+      <div className="hud-corner br" />
 
-            {/* HUD labels */}
-            <div className="hud-label tl">
-                NEURONOMICON.WORLD / <span className="hud-blink">■</span> SIGNAL LOCKED
-            </div>
-            <div className="hud-label tr">
-                NODES ONLINE: {onlineCount} / STATUS: ACTIVE
-            </div>
-            <div className="hud-label bl">
-                BUILD v1.0 / 2026
-            </div>
-            <div className="hud-label br">
-                X: {px}&nbsp;&nbsp;Y: {py}
-            </div>
-        </>
-    );
+      {/* HUD labels */}
+      <div className="hud-label tl">
+        NEURONOMICON.WORLD / <span className="hud-blink">■</span> SIGNAL LOCKED
+      </div>
+      <div className="hud-label tr">
+        NODES ONLINE: {onlineCount} / STATUS: ACTIVE
+      </div>
+      <div className="hud-label bl">
+        BUILD v1.0 / 2026
+      </div>
+      <div className="hud-label br">
+        X: {px}&nbsp;&nbsp;Y: {py}
+      </div>
+    </>
+  );
 }
