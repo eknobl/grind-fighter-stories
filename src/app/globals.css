@@ -5,6 +5,9 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --nmc-white:  #e8e8e8;
+  --nmc-dim:    rgba(232,232,232,0.4);
+  --nmc-dimmer: rgba(232,232,232,0.18);
 }
 
 @theme inline {
