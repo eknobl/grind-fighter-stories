@@ -11,11 +11,11 @@ const ParticleNetwork = dynamic(() => import('@/components/landing/ParticleNetwo
 const onlineCount = PROJECTS.filter(p => p.status === 'ONLINE').length;
 
 export default function LandingPage() {
-    const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
+  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
 
-    return (
-        <>
-            <style>{`
+  return (
+    <>
+      <style>{`
         .nmc-root {
           background: #000;
           min-height: 100vh;
@@ -99,7 +99,7 @@ export default function LandingPage() {
           font-family: var(--font-mono-nmc), monospace;
           font-size: 11px;
           letter-spacing: 0.55em;
-          color: rgba(232,232,232,0.4);
+          color: rgba(232,232,232,0.75);
           margin-top: 16px;
           text-transform: uppercase;
         }
@@ -139,7 +139,7 @@ export default function LandingPage() {
           font-family: var(--font-mono-nmc), monospace;
           font-size: 10px;
           letter-spacing: 2px;
-          color: rgba(232,232,232,0.35);
+          color: rgba(232,232,232,0.65);
           text-decoration: none;
           transition: color 0.2s;
         }
@@ -149,56 +149,56 @@ export default function LandingPage() {
           font-family: var(--font-mono-nmc), monospace;
           font-size: 8px;
           letter-spacing: 3px;
-          color: rgba(232,232,232,0.15);
+          color: rgba(232,232,232,0.5);
           text-transform: uppercase;
         }
       `}</style>
 
-            <div className="nmc-root">
-                <ParticleNetwork onMouseMove={(x, y) => setCursorPos({ x, y })} />
-                <HudOverlay onlineCount={onlineCount} cursorPos={cursorPos} />
+      <div className="nmc-root">
+        <ParticleNetwork onMouseMove={(x, y) => setCursorPos({ x, y })} />
+        <HudOverlay onlineCount={onlineCount} cursorPos={cursorPos} />
 
-                <main className="nmc-main">
-                    <header className="nmc-header">
-                        <h1 className="nmc-logo" data-text="NEURONOMICON">NEURONOMICON</h1>
-                        <p className="nmc-subtext">Cinematic Universe</p>
-                        <div className="nmc-rule" />
-                    </header>
+        <main className="nmc-main">
+          <header className="nmc-header">
+            <h1 className="nmc-logo" data-text="NEURONOMICON">NEURONOMICON</h1>
+            <p className="nmc-subtext">Cinematic Universe</p>
+            <div className="nmc-rule" />
+          </header>
 
-                    <ProjectGrid />
+          <ProjectGrid />
 
-                    <footer className="nmc-footer">
-                        <div className="nmc-footer-rule" />
-                        <div className="nmc-social-links">
-                            <a
-                                href="https://x.com/Erik_Knobl"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="nmc-social-link"
-                            >
-                                {/* X / Twitter icon */}
-                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                                </svg>
-                                @Erik_Knobl
-                            </a>
-                            <a
-                                href="https://www.youtube.com/@NeuronomiconTV"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="nmc-social-link"
-                            >
-                                {/* YouTube icon */}
-                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                                </svg>
-                                NeuronomiconTV
-                            </a>
-                        </div>
-                        <p className="nmc-copyright">© 2026 NEURONOMICON — ALL RIGHTS RESERVED</p>
-                    </footer>
-                </main>
+          <footer className="nmc-footer">
+            <div className="nmc-footer-rule" />
+            <div className="nmc-social-links">
+              <a
+                href="https://x.com/Erik_Knobl"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="nmc-social-link"
+              >
+                {/* X / Twitter icon */}
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+                @Erik_Knobl
+              </a>
+              <a
+                href="https://www.youtube.com/@NeuronomiconTV"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="nmc-social-link"
+              >
+                {/* YouTube icon */}
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                </svg>
+                NeuronomiconTV
+              </a>
             </div>
-        </>
-    );
+            <p className="nmc-copyright">© 2026 NEURONOMICON — ALL RIGHTS RESERVED</p>
+          </footer>
+        </main>
+      </div>
+    </>
+  );
 }

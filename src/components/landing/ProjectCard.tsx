@@ -4,16 +4,16 @@ import Link from 'next/link';
 import { Project } from '@/data/projects';
 
 interface ProjectCardProps {
-    project: Project;
-    index: number;
+  project: Project;
+  index: number;
 }
 
 export default function ProjectCard({ project, index }: ProjectCardProps) {
-    const isInternal = project.url?.startsWith('/');
+  const isInternal = project.url?.startsWith('/');
 
-    return (
-        <>
-            <style>{`
+  return (
+    <>
+      <style>{`
         @keyframes card-in {
           from { opacity: 0; transform: translateY(24px); }
           to   { opacity: 1; transform: translateY(0); }
@@ -90,7 +90,7 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
         .card-tagline {
           font-size: 11px;
           letter-spacing: 1px;
-          color: rgba(232,232,232,0.4);
+          color: rgba(232,232,232,0.75);
           margin: 0;
         }
         .card-tags {
@@ -102,8 +102,8 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
           font-family: var(--font-mono-nmc), monospace;
           font-size: 8px;
           letter-spacing: 2px;
-          color: rgba(232,232,232,0.3);
-          border: 1px solid rgba(232,232,232,0.1);
+          color: rgba(232,232,232,0.75);
+          border: 1px solid rgba(232,232,232,0.35);
           padding: 2px 6px;
           border-radius: 1px;
         }
@@ -136,46 +136,46 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
         }
       `}</style>
 
-            <div
-                className="project-card"
-                style={{
-                    // @ts-expect-error CSS custom property
-                    '--c': project.color,
-                    animationDelay: `${index * 0.1}s`,
-                }}
-            >
-                <div className="card-accent" />
-                <div className="card-body">
-                    <div className="card-status-row">
-                        <div className="card-dot" />
-                        <span className="card-status-text">{project.status}</span>
-                        <span className="card-id">{project.id}</span>
-                    </div>
+      <div
+        className="project-card"
+        style={{
+          // @ts-expect-error CSS custom property
+          '--c': project.color,
+          animationDelay: `${index * 0.1}s`,
+        }}
+      >
+        <div className="card-accent" />
+        <div className="card-body">
+          <div className="card-status-row">
+            <div className="card-dot" />
+            <span className="card-status-text">{project.status}</span>
+            <span className="card-id">{project.id}</span>
+          </div>
 
-                    <h3 className="card-title">{project.title}</h3>
-                    <p className="card-tagline">{project.tagline}</p>
+          <h3 className="card-title">{project.title}</h3>
+          <p className="card-tagline">{project.tagline}</p>
 
-                    <div className="card-tags">
-                        {project.tags.map(tag => (
-                            <span key={tag} className="card-tag">{tag}</span>
-                        ))}
-                    </div>
+          <div className="card-tags">
+            {project.tags.map(tag => (
+              <span key={tag} className="card-tag">{tag}</span>
+            ))}
+          </div>
 
-                    <div className="card-cta">
-                        {project.status === 'ONLINE' && project.url ? (
-                            isInternal ? (
-                                <Link href={project.url} className="card-btn">ENTER →</Link>
-                            ) : (
-                                <a href={project.url} target="_blank" rel="noopener noreferrer" className="card-btn">
-                                    READ →
-                                </a>
-                            )
-                        ) : (
-                            <span className="card-btn disabled">INCOMING —</span>
-                        )}
-                    </div>
-                </div>
-            </div>
-        </>
-    );
+          <div className="card-cta">
+            {project.status === 'ONLINE' && project.url ? (
+              isInternal ? (
+                <Link href={project.url} className="card-btn">ENTER →</Link>
+              ) : (
+                <a href={project.url} target="_blank" rel="noopener noreferrer" className="card-btn">
+                  READ →
+                </a>
+              )
+            ) : (
+              <span className="card-btn disabled">INCOMING —</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
 }
