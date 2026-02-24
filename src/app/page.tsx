@@ -95,6 +95,29 @@ export default function LandingPage() {
           93% { opacity: 1; transform: translateX(-4px); }
           95% { opacity: 1; transform: translateX(4px); }
         }
+        .nmc-nav {
+          display: flex;
+          justify-content: center;
+          gap: 32px;
+          padding-top: 24px;
+          margin-bottom: -32px;
+        }
+        .nmc-nav-link {
+          font-family: var(--font-mono-nmc), monospace;
+          font-size: 9px;
+          letter-spacing: 4px;
+          color: rgba(232,232,232,0.5);
+          text-decoration: none;
+          text-transform: uppercase;
+          border: 1px solid rgba(232,232,232,0.15);
+          padding: 5px 14px;
+          border-radius: 1px;
+          transition: color 0.2s, border-color 0.2s;
+        }
+        .nmc-nav-link:hover {
+          color: rgba(232,232,232,0.95);
+          border-color: rgba(232,232,232,0.5);
+        }
         .nmc-subtext {
           font-family: var(--font-mono-nmc), monospace;
           font-size: 11px;
@@ -160,6 +183,16 @@ export default function LandingPage() {
 
         <main className="nmc-main">
           <header className="nmc-header">
+            <nav className="nmc-nav">
+              <a
+                href="https://eknobl.github.io/nearest-stars-map/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="nmc-nav-link"
+              >
+                ✦ STAR MAP
+              </a>
+            </nav>
             <h1 className="nmc-logo" data-text="NEURONOMICON">NEURONOMICON</h1>
             <p className="nmc-subtext">Cinematic Universe</p>
             <div className="nmc-rule" />
