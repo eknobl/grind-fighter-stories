@@ -38,4 +38,13 @@ export const PROJECTS: Project[] = [
         url: '/grind-fighter/arena',
         status: 'ONLINE',
     },
+    {
+        id: 'NMC-004',
+        title: 'ARCHIVE',
+        tagline: 'Lore database — characters, factions, technology, locations',
+        tags: ['WIKI', 'LORE', 'WORLD-BUILDING'],
+        color: '#f9d72f',
+        url: '/wiki',
+        status: 'ONLINE',
+    },
 ];
