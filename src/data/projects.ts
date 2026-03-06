@@ -53,7 +53,7 @@ export const PROJECTS: Project[] = [
         tagline: 'Your GitHub repos mapped to a Dyson swarm under construction',
         tags: ['INTERACTIVE', 'THREE.JS', 'TROY SYSTEM'],
         color: '#00e5cc',
-        url: 'https://eknobl.github.io/ilion-dyson-ring',
+        url: '/ilion',
         status: 'ONLINE',
     },
     {

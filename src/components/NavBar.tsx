@@ -7,7 +7,7 @@ const NAV_LINKS = [
     { label: 'NEURONOMICON', href: '/' },
     { label: 'ARCHIVE', href: '/wiki' },
     { label: 'ARENA', href: '/grind-fighter/arena' },
-    { label: 'ILION RING', href: 'https://eknobl.github.io/ilion-dyson-ring' },
+    { label: 'ILION RING', href: '/ilion' },
     { label: 'STAR MAP', href: '/star-map/' },
 ];
 
