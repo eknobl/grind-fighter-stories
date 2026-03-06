@@ -36,6 +36,11 @@ const kodeMono = Kode_Mono({
 export const metadata: Metadata = {
   title: "THE NEURONOMICON",
   description: "A one-person cinematic universe — stories, lore, and interactive tools set in a far-future humanity building artificial gods to conquer the stars.",
+  icons: {
+    icon: "/star.png",
+    shortcut: "/star.png",
+    apple: "/star.png",
+  },
 };
 
 export default function RootLayout({

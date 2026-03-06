@@ -577,7 +577,7 @@ export default function LandingPage() {
               <span className="hub-tile-title">STAR MAP</span>
               <span className="hub-tile-sub">3D MAP OF THE SETTING</span>
             </a>
-            <a href="/ilion-ring.html" className="hub-tile">
+            <a href="https://eknobl.github.io/ilion-dyson-ring" className="hub-tile" target="_blank" rel="noopener noreferrer">
               <span className="tricolon" aria-hidden="true">:::</span>
               <span className="hub-tile-title">ILION</span>
               <span className="hub-tile-sub">THE RING AROUND A STAR</span>
