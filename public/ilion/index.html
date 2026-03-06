@@ -604,7 +604,62 @@
       }
     }
 
+
+    // ─── CITY — GITHUB REPOS AS BUILDINGS ON INNER RED SURFACE ──────────────────
+    const LANG_COLORS = {
+      JavaScript: 0xf1e05a, TypeScript: 0x3178c6, HTML: 0xe34c26,
+      CSS: 0x563d7c, Python: 0x3572a5, 'C++': 0xf34b7d,
+      Rust: 0xdea584, Go: 0x00add8, Ruby: 0x701516,
+      Java: 0xb07219
+    };
+
+    function placeBuilding(angle, yCenter, radialDepth, vertHeight, arcWidth, color, opacity) {
+      const m = mkWire(new THREE.BoxGeometry(radialDepth, vertHeight, arcWidth), color, opacity);
+      m.rotation.y = -angle;
+      m.position.set(
+        Math.cos(angle) * (RI - radialDepth / 2),
+        yCenter,
+        Math.sin(angle) * (RI - radialDepth / 2)
+      );
+      add(gDrone, m, opacity);
+    }
+
+    (async () => {
+      try {
+        const res = await fetch('https://api.github.com/users/eknobl/repos?per_page=100&sort=updated');
+        const repos = await res.json();
+        if (!Array.isArray(repos) || !repos.length) return;
+
+        const arcSpan = ARC_E - ARC_S;
+
+        repos.forEach((repo, i) => {
+          const t = (i + 0.5) / repos.length;
+          const angle = ARC_S + t * arcSpan;
+
+          const stars = repo.stargazers_count || 0;
+          const sizeKb = Math.max(repo.size || 0, 10);
+          const col = LANG_COLORS[repo.language] || 0xff5555;
+
+          // Main tower — center row
+          const radial = 1.5 + Math.min(stars * 0.5, 3.5); // 1.5–5 units inward
+          const height = 3.5 + Math.min(sizeKb / 250, 5);  // 3.5–8.5 units tall
+          placeBuilding(angle, 0, radial, height, 1.2, col, 0.60);
+
+          // Flanking towers — top & bottom for starred repos
+          if (stars > 0) {
+            const fr = radial * 0.55;
+            const fh = height * 0.45;
+            placeBuilding(angle, -7, fr, fh, 1.0, col, 0.30);
+            placeBuilding(angle, 7, fr, fh, 1.0, col, 0.30);
+          }
+        });
+      } catch (e) {
+        console.warn('[Ilion] City fetch failed:', e);
+      }
+    })();
+
     // ─── CAMERA SYSTEM ────────────────────────────────────────────────────────────
+
     let mode = 'orbital';
     let droneAngle = ARC_S;
     let droneDir = 1;    // +1 = forward toward ARC_E, -1 = reverse toward ARC_S
