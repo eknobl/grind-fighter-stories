@@ -715,29 +715,45 @@
       setCityStatus('> LOADING ...');
       clearCity();
       try {
-        const res = await fetch(
-          `https://api.github.com/users/${encodeURIComponent(username)}/repos?per_page=100&sort=updated`
-        );
-        if (!res.ok) throw new Error(res.status === 404 ? 'USER NOT FOUND' : `API ERROR ${res.status}`);
-        const repos = await res.json();
-        if (!Array.isArray(repos) || !repos.length) throw new Error('NO REPOS FOUND');
+        // Register (or re-sync) user in the ring DB
+        const regRes = await fetch('/api/ring/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username })
+        });
+        if (!regRes.ok) {
+          const err = await regRes.json().catch(() => ({}));
+          throw new Error(err.error || `ERROR ${regRes.status}`);
+        }
+        const user = await regRes.json();
 
-        const arcSpan = ARC_E - ARC_S;
-        repos.forEach((repo, i) => {
-          const t = (i + 0.5) / repos.length;
-          const angle = ARC_S + t * arcSpan;
-          const stars = repo.stargazers_count || 0;
-          const sizeKb = Math.max(repo.size || 0, 10);
-          const col = LANG_COLORS[repo.language] || 0xff5555;
-          const radial = 1.5 + Math.min(stars * 0.5, 3.5);
-          const height = 3.5 + Math.min(sizeKb / 250, 5);
+        // Load all registered colonists in the full arc
+        const usersRes = await fetch(`/api/ring/users?from=${ARC_S}&to=${ARC_E}&limit=500`);
+        if (!usersRes.ok) throw new Error('Failed to load ring data');
+        const users = await usersRes.json();
+        if (!Array.isArray(users) || !users.length) throw new Error('NO DATA');
+
+        users.forEach(u => {
+          const angle  = u.ring_angle;
+          const stars  = u.star_count  || 0;
+          const repos  = u.repo_count  || 1;
+          const col    = LANG_COLORS[u.top_language] || 0xff5555;
+          const radial = 1.5 + Math.min(stars * 0.05, 3.5);
+          const height = 3.5 + Math.min(repos / 10, 5);
           placeBuilding(angle, 0, radial, height, 1.2, col, 0.60);
           if (stars > 0) {
             placeBuilding(angle, -7, radial * 0.55, height * 0.45, 1.0, col, 0.30);
-            placeBuilding(angle, 7, radial * 0.55, height * 0.45, 1.0, col, 0.30);
+            placeBuilding(angle,  7, radial * 0.55, height * 0.45, 1.0, col, 0.30);
           }
         });
-        setCityStatus(`> ${repos.length} REPOS -- ${username.toUpperCase()}`);
+
+        setCityStatus(`> ${users.length} COLONISTS`);
+
+        // Fly camera to this user's permanent slot
+        if (typeof user.ring_angle === 'number') {
+          droneAngle = user.ring_angle;
+          droneDir   = 1;
+        }
       } catch (e) {
         console.warn('[Ilion] City fetch failed:', e);
         setCityStatus(`> ${e.message}`);
