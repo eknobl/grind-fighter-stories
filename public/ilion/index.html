@@ -211,6 +211,70 @@
       color: var(--white);
     }
 
+    /* ── CITY INPUT ───────────────────────────────────────────────────── */
+    #city-form {
+      margin-top: 4px;
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    #city-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    #gh-user {
+      background: none;
+      border: none;
+      border-bottom: 1px solid var(--steel);
+      color: var(--white);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 2px;
+      width: 130px;
+      padding: 2px 0;
+      outline: none;
+      opacity: 0.75;
+      transition: opacity .2s, border-color .2s;
+    }
+
+    #gh-user:focus {
+      opacity: 1;
+      border-color: var(--white);
+    }
+
+    #gh-user::placeholder {
+      color: var(--steel);
+      opacity: 0.5;
+    }
+
+    #gh-submit {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 2px;
+      color: var(--steel);
+      text-transform: uppercase;
+      padding: 0;
+      transition: color .2s;
+    }
+
+    #gh-submit:hover {
+      color: var(--white);
+    }
+
+    #city-status {
+      font-size: 8px;
+      letter-spacing: 1.5px;
+      color: rgba(255, 255, 255, 0.35);
+      text-transform: uppercase;
+    }
+
     /* ── CONTROLS — top right ────────────────────────────────────────── */
     #controls {
       position: absolute;
@@ -343,6 +407,14 @@
         <div class="stat-row" id="dim-width">&gt; 21,000,000 KILOMETERS WIDTH</div>
         <div class="stat-row" id="dim-depth">&gt; 21,000,000 KILOMETERS DEPTH</div>
         <button id="units-toggle">UNITS: KM</button>
+      </div>
+      <div class="stat-section" id="city-form">
+        <div class="stat-label">POPULATION</div>
+        <div id="city-input-row">
+          <input id="gh-user" type="text" placeholder="github username" autocomplete="off" spellcheck="false" />
+          <button id="gh-submit">LOAD</button>
+        </div>
+        <div id="city-status">&gt; LOADING …</div>
       </div>
     </div>
 
@@ -606,6 +678,9 @@
 
 
     // ─── CITY — GITHUB REPOS AS BUILDINGS ON INNER RED SURFACE ──────────────────
+    const gCity = new THREE.Group();
+    gDrone.add(gCity);
+
     const LANG_COLORS = {
       JavaScript: 0xf1e05a, TypeScript: 0x3178c6, HTML: 0xe34c26,
       CSS: 0x563d7c, Python: 0x3572a5, 'C++': 0xf34b7d,
@@ -621,42 +696,61 @@
         yCenter,
         Math.sin(angle) * (RI - radialDepth / 2)
       );
-      add(gDrone, m, opacity);
+      add(gCity, m, opacity);
     }
 
-    (async () => {
+    function clearCity() {
+      while (gCity.children.length > 0) {
+        const c = gCity.children[0];
+        gCity.remove(c);
+        if (c.geometry) c.geometry.dispose();
+        if (c.material) c.material.dispose();
+      }
+    }
+
+    const cityStatusEl = document.getElementById('city-status');
+    function setCityStatus(msg) { if (cityStatusEl) cityStatusEl.textContent = msg; }
+
+    async function buildCity(username) {
+      setCityStatus('> LOADING ...');
+      clearCity();
       try {
-        const res = await fetch('https://api.github.com/users/eknobl/repos?per_page=100&sort=updated');
+        const res = await fetch(
+          `https://api.github.com/users/${encodeURIComponent(username)}/repos?per_page=100&sort=updated`
+        );
+        if (!res.ok) throw new Error(res.status === 404 ? 'USER NOT FOUND' : `API ERROR ${res.status}`);
         const repos = await res.json();
-        if (!Array.isArray(repos) || !repos.length) return;
+        if (!Array.isArray(repos) || !repos.length) throw new Error('NO REPOS FOUND');
 
         const arcSpan = ARC_E - ARC_S;
-
         repos.forEach((repo, i) => {
           const t = (i + 0.5) / repos.length;
           const angle = ARC_S + t * arcSpan;
-
           const stars = repo.stargazers_count || 0;
           const sizeKb = Math.max(repo.size || 0, 10);
           const col = LANG_COLORS[repo.language] || 0xff5555;
-
-          // Main tower — center row
-          const radial = 1.5 + Math.min(stars * 0.5, 3.5); // 1.5–5 units inward
-          const height = 3.5 + Math.min(sizeKb / 250, 5);  // 3.5–8.5 units tall
+          const radial = 1.5 + Math.min(stars * 0.5, 3.5);
+          const height = 3.5 + Math.min(sizeKb / 250, 5);
           placeBuilding(angle, 0, radial, height, 1.2, col, 0.60);
-
-          // Flanking towers — top & bottom for starred repos
           if (stars > 0) {
-            const fr = radial * 0.55;
-            const fh = height * 0.45;
-            placeBuilding(angle, -7, fr, fh, 1.0, col, 0.30);
-            placeBuilding(angle, 7, fr, fh, 1.0, col, 0.30);
+            placeBuilding(angle, -7, radial * 0.55, height * 0.45, 1.0, col, 0.30);
+            placeBuilding(angle, 7, radial * 0.55, height * 0.45, 1.0, col, 0.30);
           }
         });
+        setCityStatus(`> ${repos.length} REPOS -- ${username.toUpperCase()}`);
       } catch (e) {
         console.warn('[Ilion] City fetch failed:', e);
+        setCityStatus(`> ${e.message}`);
       }
-    })();
+    }
+
+    const ghUserInput = document.getElementById('gh-user');
+    const ghSubmitBtn = document.getElementById('gh-submit');
+    function loadFromInput() { const u = ghUserInput.value.trim(); if (u) buildCity(u); }
+    ghSubmitBtn.addEventListener('click', loadFromInput);
+    ghUserInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); loadFromInput(); } });
+
+    buildCity('eknobl');
 
     // ─── CAMERA SYSTEM ────────────────────────────────────────────────────────────
 
