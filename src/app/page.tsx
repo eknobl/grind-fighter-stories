@@ -10,7 +10,7 @@ export default function LandingPage() {
           --white:     #ffffff;
           --bg:        #000000;
           --sidebar-w: 46px;
-          --mono:      var(--font-kode-mono), 'Courier New', monospace;
+          --mono:      'Kode Mono', 'Courier New', monospace;
           --body:      'Roboto', sans-serif;
         }
 
