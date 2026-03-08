@@ -1,987 +1,1284 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ILION — Neuronomicon</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kode+Mono:wght@400;700&family=Roboto:wght@400;500;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ── RESET ─────────────────────────────────────────────────────── */
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ILION — Neuronomicon</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Kode+Mono:wght@400;700&family=Roboto:wght@400;500;900&display=swap"
-    rel="stylesheet">
-  <style>
-    /* ── RESET ─────────────────────────────────────────────────────── */
-    *,
-    *::before,
-    *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+      :root {
+        --red: #ff0000;
+        --steel: #7184a0;
+        --white: #ffffff;
+        --bg: #000000;
+        --mono: "Kode Mono", "Courier New", monospace;
+      }
 
-    :root {
-      --red: #ff0000;
-      --steel: #7184a0;
-      --white: #ffffff;
-      --bg: #000000;
-      --mono: 'Kode Mono', 'Courier New', monospace;
-    }
+      body {
+        background: #000;
+        overflow: hidden;
+        height: 100vh;
+      }
 
-    body {
-      background: #000;
-      overflow: hidden;
-      height: 100vh;
-    }
+      a {
+        text-decoration: none;
+        color: inherit;
+      }
 
-    a {
-      text-decoration: none;
-      color: inherit;
-    }
+      /* ── CANVAS ─────────────────────────────────────────────────────── */
+      canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1;
+        display: block;
+      }
 
-    /* ── CANVAS ─────────────────────────────────────────────────────── */
-    canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 1;
-      display: block;
-    }
+      /* ── BANNER ─────────────────────────────────────────────────────── */
+      #banner {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 46px;
+        z-index: 20;
+        background: var(--white);
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+      }
 
-    /* ── BANNER ─────────────────────────────────────────────────────── */
-    #banner {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 46px;
-      z-index: 20;
-      background: var(--white);
-      display: flex;
-      align-items: center;
-      overflow: hidden;
-    }
+      #banner-star {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 46px;
+        height: 46px;
+        flex-shrink: 0;
+        background: var(--bg);
+        color: var(--white);
+        font-size: 18px;
+        transition: background 0.2s;
+      }
 
-    #banner-star {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 46px;
-      height: 46px;
-      flex-shrink: 0;
-      background: var(--bg);
-      color: var(--white);
-      font-size: 18px;
-      transition: background .2s;
-    }
+      #banner-star:hover {
+        background: #1a1a1a;
+      }
 
-    #banner-star:hover {
-      background: #1a1a1a;
-    }
+      #banner-title {
+        font-family: var(--mono);
+        font-weight: 700;
+        font-size: 18px;
+        color: var(--bg);
+        padding-left: 18px;
+        letter-spacing: 2px;
+        user-select: none;
+      }
 
-    #banner-title {
-      font-family: var(--mono);
-      font-weight: 700;
-      font-size: 18px;
-      color: var(--bg);
-      padding-left: 18px;
-      letter-spacing: 2px;
-      user-select: none;
-    }
+      /* Diagonal red stripes — top-right corner of banner */
+      #banner-stripes {
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 220px;
+        height: 100%;
+        overflow: hidden;
+        pointer-events: none;
+      }
 
-    /* Diagonal red stripes — top-right corner of banner */
-    #banner-stripes {
-      position: absolute;
-      right: 0;
-      top: 0;
-      width: 220px;
-      height: 100%;
-      overflow: hidden;
-      pointer-events: none;
-    }
+      #banner-stripes::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--bg);
+        clip-path: polygon(40% 0, 100% 0, 100% 100%, 0% 100%);
+      }
 
-    #banner-stripes::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--bg);
-      clip-path: polygon(40% 0, 100% 0, 100% 100%, 0% 100%);
-    }
-
-    #banner-stripes::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(-45deg,
+      #banner-stripes::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+          -45deg,
           var(--red) 0px,
           var(--red) 14px,
           transparent 14px,
-          transparent 32px);
-      clip-path: polygon(40% 0, 100% 0, 100% 100%, 0% 100%);
-    }
+          transparent 32px
+        );
+        clip-path: polygon(40% 0, 100% 0, 100% 100%, 0% 100%);
+      }
 
-    /* ── VIGNETTE & CRT ─────────────────────────────────────────────── */
-    #vignette {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.65) 100%);
-      pointer-events: none;
-      z-index: 15;
-    }
+      /* ── VIGNETTE & CRT ─────────────────────────────────────────────── */
+      #vignette {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(
+          ellipse at center,
+          transparent 55%,
+          rgba(0, 0, 0, 0.65) 100%
+        );
+        pointer-events: none;
+        z-index: 15;
+      }
 
-    body::after {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: repeating-linear-gradient(0deg, transparent, transparent 2px,
-          rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 4px);
-      pointer-events: none;
-      z-index: 200;
-    }
+      body::after {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.03) 2px,
+          rgba(0, 0, 0, 0.03) 4px
+        );
+        pointer-events: none;
+        z-index: 200;
+      }
 
-    /* ── MAIN UI OVERLAY ─────────────────────────────────────────────── */
-    #ui {
-      position: fixed;
-      top: 46px;
-      left: 0;
-      right: 0;
-      bottom: 46px;
-      z-index: 10;
-      pointer-events: none;
-      font-family: var(--mono);
-    }
+      /* ── MAIN UI OVERLAY ─────────────────────────────────────────────── */
+      #ui {
+        position: fixed;
+        top: 46px;
+        left: 0;
+        right: 0;
+        bottom: 46px;
+        z-index: 10;
+        pointer-events: none;
+        font-family: var(--mono);
+      }
 
-    /* ── STATS PANEL — top left ──────────────────────────────────────── */
-    #stats {
-      position: absolute;
-      top: 24px;
-      left: 30px;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
+      /* ── STATS PANEL — top left ──────────────────────────────────────── */
+      #stats {
+        position: absolute;
+        top: 24px;
+        left: 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
 
-    .stat-section {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
+      .stat-section {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
 
-    .stat-label {
-      font-size: 9px;
-      letter-spacing: 4px;
-      color: var(--steel);
-      text-transform: uppercase;
-      margin-bottom: 5px;
-    }
+      .stat-label {
+        font-size: 9px;
+        letter-spacing: 4px;
+        color: var(--steel);
+        text-transform: uppercase;
+        margin-bottom: 5px;
+      }
 
-    .stat-row {
-      font-size: 9px;
-      letter-spacing: 1.5px;
-      color: rgba(255, 255, 255, 0.75);
-      text-transform: uppercase;
-      line-height: 1.7;
-    }
+      .stat-row {
+        font-size: 9px;
+        letter-spacing: 1.5px;
+        color: rgba(255, 255, 255, 0.75);
+        text-transform: uppercase;
+        line-height: 1.7;
+      }
 
-    #units-toggle {
-      margin-top: 8px;
-      background: none;
-      border: none;
-      padding: 0;
-      cursor: pointer;
-      pointer-events: auto;
-      font-family: var(--mono);
-      font-size: 8px;
-      letter-spacing: 2px;
-      color: var(--steel);
-      text-transform: uppercase;
-      text-align: left;
-      opacity: 0.65;
-      transition: opacity .2s, color .2s;
-    }
+      #units-toggle {
+        margin-top: 8px;
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        pointer-events: auto;
+        font-family: var(--mono);
+        font-size: 8px;
+        letter-spacing: 2px;
+        color: var(--steel);
+        text-transform: uppercase;
+        text-align: left;
+        opacity: 0.65;
+        transition:
+          opacity 0.2s,
+          color 0.2s;
+      }
 
-    #units-toggle:hover {
-      opacity: 1;
-      color: var(--white);
-    }
+      #units-toggle:hover {
+        opacity: 1;
+        color: var(--white);
+      }
 
-    /* ── CITY INPUT ───────────────────────────────────────────────────── */
-    #city-form {
-      margin-top: 4px;
-      pointer-events: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+      /* ── CITY INPUT ───────────────────────────────────────────────────── */
+      #city-form {
+        margin-top: 4px;
+        pointer-events: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
 
-    #city-input-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
+      #city-input-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
 
-    #gh-user {
-      background: none;
-      border: none;
-      border-bottom: 1px solid var(--steel);
-      color: var(--white);
-      font-family: var(--mono);
-      font-size: 9px;
-      letter-spacing: 2px;
-      width: 130px;
-      padding: 2px 0;
-      outline: none;
-      opacity: 0.75;
-      transition: opacity .2s, border-color .2s;
-    }
+      #gh-user {
+        background: none;
+        border: none;
+        border-bottom: 1px solid var(--steel);
+        color: var(--white);
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 2px;
+        width: 130px;
+        padding: 2px 0;
+        outline: none;
+        opacity: 0.75;
+        transition:
+          opacity 0.2s,
+          border-color 0.2s;
+      }
 
-    #gh-user:focus {
-      opacity: 1;
-      border-color: var(--white);
-    }
+      #gh-user:focus {
+        opacity: 1;
+        border-color: var(--white);
+      }
 
-    #gh-user::placeholder {
-      color: var(--steel);
-      opacity: 0.5;
-    }
+      #gh-user::placeholder {
+        color: var(--steel);
+        opacity: 0.5;
+      }
 
-    #gh-submit {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-family: var(--mono);
-      font-size: 8px;
-      letter-spacing: 2px;
-      color: var(--steel);
-      text-transform: uppercase;
-      padding: 0;
-      transition: color .2s;
-    }
+      #gh-submit {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-family: var(--mono);
+        font-size: 8px;
+        letter-spacing: 2px;
+        color: var(--steel);
+        text-transform: uppercase;
+        padding: 0;
+        transition: color 0.2s;
+      }
 
-    #gh-submit:hover {
-      color: var(--white);
-    }
+      #gh-submit:hover {
+        color: var(--white);
+      }
 
-    #city-status {
-      font-size: 8px;
-      letter-spacing: 1.5px;
-      color: rgba(255, 255, 255, 0.35);
-      text-transform: uppercase;
-    }
+      #city-status {
+        font-size: 8px;
+        letter-spacing: 1.5px;
+        color: rgba(255, 255, 255, 0.35);
+        text-transform: uppercase;
+      }
 
-    /* ── CONTROLS — top right ────────────────────────────────────────── */
-    #controls {
-      position: absolute;
-      top: 24px;
-      right: 30px;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      text-align: right;
-    }
+      /* ── CONTROLS — top right ────────────────────────────────────────── */
+      #controls {
+        position: absolute;
+        top: 24px;
+        right: 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        text-align: right;
+      }
 
-    /* ── HINT ────────────────────────────────────────────────────────── */
-    #hint {
-      position: absolute;
-      bottom: 18px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 9px;
-      letter-spacing: 3px;
-      color: rgba(255, 255, 255, 0.2);
-      white-space: nowrap;
-    }
+      /* ── HINT ────────────────────────────────────────────────────────── */
+      #hint {
+        position: absolute;
+        bottom: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 9px;
+        letter-spacing: 3px;
+        color: rgba(255, 255, 255, 0.2);
+        white-space: nowrap;
+      }
 
-    /* ── TOOLTIPS ────────────────────────────────────────────────────── */
-    .tooltip {
-      position: absolute;
-      background: var(--red);
-      color: var(--white);
-      font-family: var(--mono);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      padding: 6px 12px;
-      white-space: nowrap;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.5s;
-    }
+      /* ── TOOLTIPS ────────────────────────────────────────────────────── */
+      .tooltip {
+        position: absolute;
+        background: var(--red);
+        color: var(--white);
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding: 6px 12px;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.5s;
+      }
 
-    /* Downward-pointing arrow */
-    .tooltip::after {
-      content: '';
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 0;
-      height: 0;
-      border-left: 7px solid transparent;
-      border-right: 7px solid transparent;
-      border-top: 9px solid var(--red);
-    }
+      /* Downward-pointing arrow */
+      .tooltip::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 7px solid transparent;
+        border-right: 7px solid transparent;
+        border-top: 9px solid var(--red);
+      }
 
-    /* ── FOOTER ──────────────────────────────────────────────────────── */
-    #site-footer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 46px;
-      z-index: 20;
-      background: var(--white);
-      display: flex;
-      align-items: center;
-    }
+      /* ── FOOTER ──────────────────────────────────────────────────────── */
+      #site-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 46px;
+        z-index: 20;
+        background: var(--white);
+        display: flex;
+        align-items: center;
+      }
 
-    #footer-name {
-      font-family: var(--mono);
-      font-weight: 700;
-      font-size: clamp(14px, 1.8vw, 22px);
-      color: var(--steel);
-      padding-left: 44px;
-      transition: opacity .2s;
-    }
+      #footer-name {
+        font-family: var(--mono);
+        font-weight: 700;
+        font-size: clamp(14px, 1.8vw, 22px);
+        color: var(--steel);
+        padding-left: 44px;
+        transition: opacity 0.2s;
+      }
 
-    #footer-name:hover {
-      opacity: 0.75;
-    }
+      #footer-name:hover {
+        opacity: 0.75;
+      }
 
-    #footer-stripes {
-      position: absolute;
-      right: 0;
-      top: 0;
-      height: 100%;
-      display: flex;
-    }
+      #footer-stripes {
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 100%;
+        display: flex;
+      }
 
-    .fs {
-      display: block;
-      width: 10px;
-      height: 100%;
-    }
+      .fs {
+        display: block;
+        width: 10px;
+        height: 100%;
+      }
 
-    .fs.black {
-      background: var(--bg);
-    }
+      .fs.black {
+        background: var(--bg);
+      }
 
-    .fs.blue {
-      background: var(--steel);
-    }
-  </style>
-</head>
+      .fs.blue {
+        background: var(--steel);
+      }
+    </style>
+  </head>
 
-<body>
+  <body>
+    <!-- ── BANNER ── -->
+    <header id="banner">
+      <a
+        href="https://neuronomicon.world"
+        id="banner-star"
+        aria-label="Back to Neuronomicon"
+        >✦</a
+      >
+      <span id="banner-title">::: &nbsp;ILION</span>
+      <div id="banner-stripes" aria-hidden="true"></div>
+    </header>
 
-  <!-- ── BANNER ── -->
-  <header id="banner">
-    <a href="https://neuronomicon.world" id="banner-star" aria-label="Back to Neuronomicon">✦</a>
-    <span id="banner-title">::: &nbsp;ILION</span>
-    <div id="banner-stripes" aria-hidden="true"></div>
-  </header>
+    <!-- ── VIGNETTE ── -->
+    <div id="vignette"></div>
 
-  <!-- ── VIGNETTE ── -->
-  <div id="vignette"></div>
-
-  <!-- ── MAIN UI ── -->
-  <div id="ui">
-
-    <!-- Stats panel — top left -->
-    <div id="stats">
-      <div class="stat-section">
-        <div class="stat-label">LOCATION</div>
-        <div class="stat-row">&gt; CENTAURI SECTOR</div>
-        <div class="stat-row">&gt; TROY SYSTEM</div>
-      </div>
-      <div class="stat-section">
-        <div class="stat-label">DIMENSIONS</div>
-        <div class="stat-row" id="dim-long">&gt; 523,200,000 KILOMETERS LONG</div>
-        <div class="stat-row" id="dim-width">&gt; 21,000,000 KILOMETERS WIDTH</div>
-        <div class="stat-row" id="dim-depth">&gt; 21,000,000 KILOMETERS DEPTH</div>
-        <button id="units-toggle">UNITS: KM</button>
-      </div>
-      <div class="stat-section" id="city-form">
-        <div class="stat-label">POPULATION</div>
-        <div id="city-input-row">
-          <input id="gh-user" type="text" placeholder="github username" autocomplete="off" spellcheck="false" />
-          <button id="gh-submit">LOAD</button>
+    <!-- ── MAIN UI ── -->
+    <div id="ui">
+      <!-- Stats panel — top left -->
+      <div id="stats">
+        <div class="stat-section">
+          <div class="stat-label">LOCATION</div>
+          <div class="stat-row">&gt; CENTAURI SECTOR</div>
+          <div class="stat-row">&gt; TROY SYSTEM</div>
         </div>
-        <div id="city-status">&gt; LOADING …</div>
+        <div class="stat-section">
+          <div class="stat-label">DIMENSIONS</div>
+          <div class="stat-row" id="dim-long">
+            &gt; 523,200,000 KILOMETERS LONG
+          </div>
+          <div class="stat-row" id="dim-width">
+            &gt; 21,000,000 KILOMETERS WIDTH
+          </div>
+          <div class="stat-row" id="dim-depth">
+            &gt; 21,000,000 KILOMETERS DEPTH
+          </div>
+          <button id="units-toggle">UNITS: KM</button>
+        </div>
+        <div class="stat-section" id="city-form">
+          <div class="stat-label">POPULATION</div>
+          <div id="city-input-row">
+            <input
+              id="gh-user"
+              type="text"
+              placeholder="github username"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button id="gh-submit">LOAD</button>
+          </div>
+          <div id="city-status">&gt; LOADING …</div>
+        </div>
       </div>
+
+      <!-- Controls — top right -->
+      <div id="controls">
+        <div class="stat-label">CONTROLS</div>
+        <div class="stat-row">&gt; SPACE: CHANGE VIEW</div>
+      </div>
+
+      <!-- Hint -->
+      <div id="hint">SPACE — APPROACH THE RING</div>
+
+      <!-- Tooltips (positioned by JS) -->
+      <div class="tooltip" id="tooltip-star">TROY STAR</div>
+      <div class="tooltip" id="tooltip-ring">ILION RING</div>
     </div>
 
-    <!-- Controls — top right -->
-    <div id="controls">
-      <div class="stat-label">CONTROLS</div>
-      <div class="stat-row">&gt; SPACE: CHANGE VIEW</div>
-    </div>
+    <!-- ── FOOTER ── -->
+    <footer id="site-footer">
+      <a href="https://neuronomicon.world" id="footer-name">NEURONOMICON</a>
+      <div id="footer-stripes" aria-hidden="true">
+        <span class="fs black"></span>
+        <span class="fs black"></span>
+        <span class="fs blue"></span>
+        <span class="fs black"></span>
+      </div>
+    </footer>
 
-    <!-- Hint -->
-    <div id="hint">SPACE — APPROACH THE RING</div>
-
-    <!-- Tooltips (positioned by JS) -->
-    <div class="tooltip" id="tooltip-star">TROY STAR</div>
-    <div class="tooltip" id="tooltip-ring">ILION RING</div>
-
-  </div>
-
-  <!-- ── FOOTER ── -->
-  <footer id="site-footer">
-    <a href="https://neuronomicon.world" id="footer-name">NEURONOMICON</a>
-    <div id="footer-stripes" aria-hidden="true">
-      <span class="fs black"></span>
-      <span class="fs black"></span>
-      <span class="fs blue"></span>
-      <span class="fs black"></span>
-    </div>
-  </footer>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script>
-    // ─── RENDERER ─────────────────────────────────────────────────────────────────
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setClearColor(0x010108);
-    document.body.appendChild(renderer.domElement);
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(44, window.innerWidth / window.innerHeight, 0.1, 10000);
-
-    // ─── CONSTANTS ────────────────────────────────────────────────────────────────
-    const R = 200;
-    const RI = R - 14;   // 186 — inner face (ground, faces Troy ★)
-    const RO = R + 14;   // 214 — outer hull (ceiling, faces space)
-    const H = 14;       // half-height
-
-    // Arc: 215° completed, 145° gap
-    const ARC_S = -Math.PI * 0.10;
-    const ARC_E = Math.PI * 1.085;
-
-    // Colours
-    const COL_INNER = 0xff3333;
-    const COL_OUTER = 0x4488ff;
-    const COL_TOP = 0xffcc00;
-    const COL_BOT = 0x44ff88;
-    const COL_STRUCT = 0x226644;
-    const COL_ARC = 0x00ccbb;
-    const COL_GHOST = 0x002018;
-
-    // ─── LOD BLEND ────────────────────────────────────────────────────────────────
-    let tDrone = 0;
-    const gOrbit = new THREE.Group();
-    const gDrone = new THREE.Group();
-    scene.add(gOrbit);
-    scene.add(gDrone);
-
-    function add(group, obj, baseOp) {
-      if (baseOp !== undefined && obj.material) {
-        obj.material.opacity = baseOp;
-        obj.userData.baseOp = baseOp;
+    <!-- Import Map for Three.js and Addons -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+        }
       }
-      group.add(obj);
-      return obj;
-    }
+    </script>
+    <script type="module">
+      import * as THREE from "three";
+      import { Line2 } from "three/addons/lines/Line2.js";
+      import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+      import { LineGeometry } from "three/addons/lines/LineGeometry.js";
+      import { Wireframe } from "three/addons/lines/Wireframe.js";
+      import { WireframeGeometry2 } from "three/addons/lines/WireframeGeometry2.js";
 
-    // ─── HELPERS ──────────────────────────────────────────────────────────────────
-    const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
-
-    function hsh(s) {
-      let v = 5381;
-      for (let i = 0; i < s.length; i++) v = (Math.imul(v, 33) ^ s.charCodeAt(i)) >>> 0;
-      return v;
-    }
-
-    function mkLine(pts, col, op) {
-      return new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(pts),
-        new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: op })
+      // ─── RENDERER ─────────────────────────────────────────────────────────────────
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setClearColor(0x010108);
+      document.body.appendChild(renderer.domElement);
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(
+        44,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        10000,
       );
-    }
 
-    function mkArc(r, segs, y, col, op) {
-      const pts = [];
-      for (let i = 0; i <= segs; i++) {
-        const a = ARC_S + (i / segs) * (ARC_E - ARC_S);
-        pts.push(V3(Math.cos(a) * r, y, Math.sin(a) * r));
+      // ─── CONSTANTS ────────────────────────────────────────────────────────────────
+      const R = 200;
+      const RI = R - 14; // 186 — inner face (ground, faces Troy ★)
+      const RO = R + 14; // 214 — outer hull (ceiling, faces space)
+      const H = 14; // half-height
+
+      // Arc: 215° completed, 145° gap
+      const ARC_S = -Math.PI * 0.1;
+      const ARC_E = Math.PI * 1.085;
+
+      // Colours
+      const COL_INNER = 0xff3333;
+      const COL_OUTER = 0x4488ff;
+      const COL_TOP = 0xffcc00;
+      const COL_BOT = 0x44ff88;
+      const COL_STRUCT = 0x226644;
+      const COL_ARC = 0x00ccbb;
+      const COL_GHOST = 0x002018;
+
+      // ─── LOD BLEND ────────────────────────────────────────────────────────────────
+      let tDrone = 0;
+      const gOrbit = new THREE.Group();
+      const gDrone = new THREE.Group();
+      scene.add(gOrbit);
+      scene.add(gDrone);
+
+      function add(group, obj, baseOp) {
+        if (baseOp !== undefined && obj.material) {
+          obj.material.opacity = baseOp;
+          obj.userData.baseOp = baseOp;
+        }
+        group.add(obj);
+        return obj;
       }
-      return mkLine(pts, col, op);
-    }
 
-    function mkWire(geo, col, op) {
-      return new THREE.LineSegments(
-        new THREE.WireframeGeometry(geo),
-        new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: op })
-      );
-    }
+      // ─── HELPERS ──────────────────────────────────────────────────────────────────
+      const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
 
-    // ─── ALWAYS-ON ────────────────────────────────────────────────────────────────
-    // Starfield
-    {
-      const n = 3800, buf = new Float32Array(n * 3);
-      for (let i = 0; i < n * 3; i++) buf[i] = (Math.random() - 0.5) * 6000;
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.BufferAttribute(buf, 3));
-      scene.add(new THREE.Points(geo,
-        new THREE.PointsMaterial({ color: 0xffffff, size: 0.75, transparent: true, opacity: 0.5 })
-      ));
-    }
-
-    // Troy (star at ring center)
-    {
-      const g = new THREE.Group();
-      g.add(new THREE.Mesh(new THREE.SphereGeometry(1.8, 8, 8),
-        new THREE.MeshBasicMaterial({ color: 0xfff8ee })));
-      const corona = mkWire(new THREE.TorusGeometry(4, 0.08, 4, 20), 0xffee88, 0.06);
-      corona.rotation.x = Math.PI / 2;
-      g.add(corona);
-      g.add(new THREE.PointLight(0xfff8ee, 0.5, 800));
-      scene.add(g);
-    }
-
-    // Boneyard
-    {
-      for (let i = 0; i < 70; i++) {
-        const s = hsh('bone' + i);
-        const a = ((s % 10000) / 10000) * Math.PI * 2;
-        const r = R * 1.38 + (s % 110);
-        const y = ((s >> 8 & 0xff) / 255 - 0.5) * 80;
-        const sz = 0.6 + (s % 20) * 0.16;
-        const ast = mkWire(new THREE.IcosahedronGeometry(sz, s % 2), 0x383838,
-          0.10 + (s % 12) * 0.012);
-        ast.position.set(Math.cos(a) * r, y, Math.sin(a) * r);
-        ast.rotation.set(((s >> 4) & 0xff) / 255 * Math.PI * 2,
-          ((s >> 12) & 0xff) / 255 * Math.PI * 2,
-          ((s >> 20) & 0xff) / 255 * Math.PI * 2);
-        ast.userData.spin = {
-          x: ((s & 0xf) / 15 - 0.5) * 0.003,
-          y: ((s >> 4 & 0xf) / 15 - 0.5) * 0.003
-        };
-        scene.add(ast);
+      function hsh(s) {
+        let v = 5381;
+        for (let i = 0; i < s.length; i++)
+          v = (Math.imul(v, 33) ^ s.charCodeAt(i)) >>> 0;
+        return v;
       }
-    }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // ORBITAL GROUP
-    // ═══════════════════════════════════════════════════════════════════════════════
-    add(gOrbit, mkArc(R, 280, 0, COL_ARC, 0.80), 0.80);
+      // Store all LineMaterials to update their resolution on resize
+      const lineMaterials = [];
 
-    {
-      const GAP = Math.PI * 2 - (ARC_E - ARC_S);
-      [0.22, 0.52, 0.80].forEach((frac, i) => {
+      function createLineMaterial(col, op) {
+        const mat = new LineMaterial({
+          color: col,
+          linewidth: 2, // 2 pixels thick
+          transparent: true,
+          opacity: op,
+          resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
+        });
+        lineMaterials.push(mat);
+        return mat;
+      }
+
+      function mkLine(pts, col, op) {
+        const geometry = new LineGeometry();
+        const positions = [];
+        for (let i = 0; i < pts.length; i++) {
+          positions.push(pts[i].x, pts[i].y, pts[i].z);
+        }
+        geometry.setPositions(positions);
+
+        const material = createLineMaterial(col, op);
+        const line = new Line2(geometry, material);
+        line.computeLineDistances();
+        return line;
+      }
+
+      function mkArc(r, segs, y, col, op) {
         const pts = [];
-        for (let j = 0; j <= 20; j++) {
-          const a = ARC_E + (j / 20) * GAP * frac;
-          pts.push(V3(Math.cos(a) * R, 0, Math.sin(a) * R));
+        for (let i = 0; i <= segs; i++) {
+          const a = ARC_S + (i / segs) * (ARC_E - ARC_S);
+          pts.push(V3(Math.cos(a) * r, y, Math.sin(a) * r));
         }
-        const op = 0.09 - i * 0.02;
-        add(gOrbit, mkLine(pts, COL_GHOST, op), op);
-      });
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // DRONE GROUP
-    // ═══════════════════════════════════════════════════════════════════════════════
-
-    // A. Inner face (red) — ground
-    [-H, -H / 2, 0, H / 2, H].forEach(y => {
-      const op = y === 0 ? 0.70 : 0.45;
-      add(gDrone, mkArc(RI, 240, y, COL_INNER, op), op);
-    });
-    for (let i = 0; i <= 36; i++) {
-      const a = ARC_S + (i / 36) * (ARC_E - ARC_S);
-      const op = (i % 6 === 0) ? 0.35 : 0.16;
-      add(gDrone, mkLine([
-        V3(Math.cos(a) * RI, -H, Math.sin(a) * RI),
-        V3(Math.cos(a) * RI, H, Math.sin(a) * RI)
-      ], COL_INNER, op), op);
-    }
-
-    // B. Outer hull (blue) — ceiling
-    [-H, 0, H].forEach(y => {
-      const op = y === 0 ? 0.45 : 0.28;
-      add(gDrone, mkArc(RO, 240, y, COL_OUTER, op), op);
-    });
-    for (let i = 0; i <= 22; i++) {
-      const a = ARC_S + (i / 22) * (ARC_E - ARC_S);
-      add(gDrone, mkLine([
-        V3(Math.cos(a) * RO, -H, Math.sin(a) * RO),
-        V3(Math.cos(a) * RO, H, Math.sin(a) * RO)
-      ], COL_OUTER, 0.18), 0.18);
-    }
-
-    // C. Top edge (yellow) y = +H
-    add(gDrone, mkArc(RI, 200, +H, COL_TOP, 0.50), 0.50);
-    add(gDrone, mkArc(RO, 200, +H, COL_TOP, 0.35), 0.35);
-
-    // D. Bottom edge (green) y = -H
-    add(gDrone, mkArc(RI, 200, -H, COL_BOT, 0.50), 0.50);
-    add(gDrone, mkArc(RO, 200, -H, COL_BOT, 0.35), 0.35);
-
-    // E. Cross-section ribs
-    {
-      const N_FRAMES = 22;
-      for (let i = 0; i <= N_FRAMES; i++) {
-        const a = ARC_S + (i / N_FRAMES) * (ARC_E - ARC_S);
-        const xi = Math.cos(a) * RI, zi = Math.sin(a) * RI;
-        const xo = Math.cos(a) * RO, zo = Math.sin(a) * RO;
-        add(gDrone, mkLine([V3(xi, -H, zi), V3(xi, H, zi)], COL_INNER, 0.28), 0.28);
-        add(gDrone, mkLine([V3(xo, -H, zo), V3(xo, H, zo)], COL_OUTER, 0.22), 0.22);
-        add(gDrone, mkLine([V3(xi, -H, zi), V3(xo, -H, zo)], COL_BOT, 0.20), 0.20);
-        add(gDrone, mkLine([V3(xi, H, zi), V3(xo, H, zo)], COL_TOP, 0.20), 0.20);
-        add(gDrone, mkLine([V3(xi, 0, zi), V3(xo, 0, zo)], COL_STRUCT, 0.18), 0.18);
+        return mkLine(pts, col, op);
       }
-    }
 
-    // F. End-caps
-    [ARC_S, ARC_E].forEach(a => {
-      const xi = Math.cos(a) * RI, zi = Math.sin(a) * RI;
-      const xo = Math.cos(a) * RO, zo = Math.sin(a) * RO;
-      add(gDrone, mkLine([V3(xi, -H, zi), V3(xi, H, zi)], COL_INNER, 0.80), 0.80);
-      add(gDrone, mkLine([V3(xo, -H, zo), V3(xo, H, zo)], COL_OUTER, 0.65), 0.65);
-      add(gDrone, mkLine([V3(xi, -H, zi), V3(xo, -H, zo)], COL_BOT, 0.70), 0.70);
-      add(gDrone, mkLine([V3(xi, H, zi), V3(xo, H, zo)], COL_TOP, 0.70), 0.70);
-    });
+      function mkWire(geo, col, op) {
+        const geometry = new WireframeGeometry2(geo);
+        const material = createLineMaterial(col, op);
+        const wireframe = new Wireframe(geometry, material);
+        wireframe.computeLineDistances();
+        return wireframe;
+      }
 
-    // G. Gap ghost arcs
-    {
-      const GAP = Math.PI * 2 - (ARC_E - ARC_S);
-      [0.18, 0.45, 0.72].forEach(frac => {
-        [[RI, 0.09], [RO, 0.06]].forEach(([r, op]) => {
+      // ─── ALWAYS-ON ────────────────────────────────────────────────────────────────
+      // Starfield
+      {
+        const n = 3800,
+          buf = new Float32Array(n * 3);
+        for (let i = 0; i < n * 3; i++) buf[i] = (Math.random() - 0.5) * 6000;
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute("position", new THREE.BufferAttribute(buf, 3));
+        scene.add(
+          new THREE.Points(
+            geo,
+            new THREE.PointsMaterial({
+              color: 0xffffff,
+              size: 0.75,
+              transparent: true,
+              opacity: 0.5,
+            }),
+          ),
+        );
+      }
+
+      // Troy (star at ring center)
+      {
+        const g = new THREE.Group();
+        g.add(
+          new THREE.Mesh(
+            new THREE.SphereGeometry(1.8, 8, 8),
+            new THREE.MeshBasicMaterial({ color: 0xfff8ee }),
+          ),
+        );
+        const corona = mkWire(
+          new THREE.TorusGeometry(4, 0.08, 4, 20),
+          0xffee88,
+          0.06,
+        );
+        corona.rotation.x = Math.PI / 2;
+        g.add(corona);
+        g.add(new THREE.PointLight(0xfff8ee, 0.5, 800));
+        scene.add(g);
+      }
+
+      // Boneyard
+      {
+        for (let i = 0; i < 70; i++) {
+          const s = hsh("bone" + i);
+          const a = ((s % 10000) / 10000) * Math.PI * 2;
+          const r = R * 1.38 + (s % 110);
+          const y = (((s >> 8) & 0xff) / 255 - 0.5) * 80;
+          const sz = 0.6 + (s % 20) * 0.16;
+          const ast = mkWire(
+            new THREE.IcosahedronGeometry(sz, s % 2),
+            0x383838,
+            0.1 + (s % 12) * 0.012,
+          );
+          ast.position.set(Math.cos(a) * r, y, Math.sin(a) * r);
+          ast.rotation.set(
+            (((s >> 4) & 0xff) / 255) * Math.PI * 2,
+            (((s >> 12) & 0xff) / 255) * Math.PI * 2,
+            (((s >> 20) & 0xff) / 255) * Math.PI * 2,
+          );
+          ast.userData.spin = {
+            x: ((s & 0xf) / 15 - 0.5) * 0.003,
+            y: (((s >> 4) & 0xf) / 15 - 0.5) * 0.003,
+          };
+          scene.add(ast);
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════════════════════════════
+      // ORBITAL GROUP
+      // ═══════════════════════════════════════════════════════════════════════════════
+      add(gOrbit, mkArc(R, 280, 0, COL_ARC, 0.8), 0.8);
+
+      {
+        const GAP = Math.PI * 2 - (ARC_E - ARC_S);
+        [0.22, 0.52, 0.8].forEach((frac, i) => {
           const pts = [];
-          for (let j = 0; j <= 16; j++) {
-            const a = ARC_E + (j / 16) * GAP * frac;
-            pts.push(V3(Math.cos(a) * r, 0, Math.sin(a) * r));
+          for (let j = 0; j <= 20; j++) {
+            const a = ARC_E + (j / 20) * GAP * frac;
+            pts.push(V3(Math.cos(a) * R, 0, Math.sin(a) * R));
           }
-          add(gDrone, mkLine(pts, COL_GHOST, op), op);
+          const op = 0.09 - i * 0.02;
+          add(gOrbit, mkLine(pts, COL_GHOST, op), op);
         });
+      }
+
+      // ═══════════════════════════════════════════════════════════════════════════════
+      // DRONE GROUP
+      // ═══════════════════════════════════════════════════════════════════════════════
+
+      // A. Inner face (red) — ground
+      [-H, -H / 2, 0, H / 2, H].forEach((y) => {
+        const op = y === 0 ? 0.7 : 0.45;
+        add(gDrone, mkArc(RI, 240, y, COL_INNER, op), op);
       });
-      for (let i = 0; i < 12; i++) {
-        const s = hsh('gap' + i);
-        const t = (s % 1000) / 1000;
-        const a = ARC_E + t * GAP;
-        const rr = R * 0.92 + (s % 25);
-        const op = 0.07 + (s % 7) * 0.008;
-        const m = mkWire(new THREE.BoxGeometry(2 + s % 4, 2 + (s >> 4 & 4), 2 + (s >> 8 & 3)),
-          COL_GHOST, op);
-        m.position.set(Math.cos(a) * rr, ((s >> 12 & 0xff) / 255 - 0.5) * H, Math.sin(a) * rr);
-        add(gDrone, m, op);
+      for (let i = 0; i <= 36; i++) {
+        const a = ARC_S + (i / 36) * (ARC_E - ARC_S);
+        const op = i % 6 === 0 ? 0.35 : 0.16;
+        add(
+          gDrone,
+          mkLine(
+            [
+              V3(Math.cos(a) * RI, -H, Math.sin(a) * RI),
+              V3(Math.cos(a) * RI, H, Math.sin(a) * RI),
+            ],
+            COL_INNER,
+            op,
+          ),
+          op,
+        );
       }
-    }
 
+      // B. Outer hull (blue) — ceiling
+      [-H, 0, H].forEach((y) => {
+        const op = y === 0 ? 0.45 : 0.28;
+        add(gDrone, mkArc(RO, 240, y, COL_OUTER, op), op);
+      });
+      for (let i = 0; i <= 22; i++) {
+        const a = ARC_S + (i / 22) * (ARC_E - ARC_S);
+        add(
+          gDrone,
+          mkLine(
+            [
+              V3(Math.cos(a) * RO, -H, Math.sin(a) * RO),
+              V3(Math.cos(a) * RO, H, Math.sin(a) * RO),
+            ],
+            COL_OUTER,
+            0.18,
+          ),
+          0.18,
+        );
+      }
 
-    // ─── CITY — GITHUB REPOS AS BUILDINGS ON INNER RED SURFACE ──────────────────
-    const gCity = new THREE.Group();
-    gDrone.add(gCity);
+      // C. Top edge (yellow) y = +H
+      add(gDrone, mkArc(RI, 200, +H, COL_TOP, 0.5), 0.5);
+      add(gDrone, mkArc(RO, 200, +H, COL_TOP, 0.35), 0.35);
 
-    const LANG_COLORS = {
-      JavaScript: 0xf1e05a, TypeScript: 0x3178c6, HTML: 0xe34c26,
-      CSS: 0x563d7c, Python: 0x3572a5, 'C++': 0xf34b7d,
-      Rust: 0xdea584, Go: 0x00add8, Ruby: 0x701516,
-      Java: 0xb07219
-    };
+      // D. Bottom edge (green) y = -H
+      add(gDrone, mkArc(RI, 200, -H, COL_BOT, 0.5), 0.5);
+      add(gDrone, mkArc(RO, 200, -H, COL_BOT, 0.35), 0.35);
 
-    function placeBuilding(angle, yCenter, radialDepth, vertHeight, arcWidth, color, opacity) {
-      const m = mkWire(new THREE.BoxGeometry(radialDepth, vertHeight, arcWidth), color, opacity);
-      m.rotation.y = -angle;
-      m.position.set(
-        Math.cos(angle) * (RI - radialDepth / 2),
+      // E. Cross-section ribs
+      {
+        const N_FRAMES = 22;
+        for (let i = 0; i <= N_FRAMES; i++) {
+          const a = ARC_S + (i / N_FRAMES) * (ARC_E - ARC_S);
+          const xi = Math.cos(a) * RI,
+            zi = Math.sin(a) * RI;
+          const xo = Math.cos(a) * RO,
+            zo = Math.sin(a) * RO;
+          add(
+            gDrone,
+            mkLine([V3(xi, -H, zi), V3(xi, H, zi)], COL_INNER, 0.28),
+            0.28,
+          );
+          add(
+            gDrone,
+            mkLine([V3(xo, -H, zo), V3(xo, H, zo)], COL_OUTER, 0.22),
+            0.22,
+          );
+          add(
+            gDrone,
+            mkLine([V3(xi, -H, zi), V3(xo, -H, zo)], COL_BOT, 0.2),
+            0.2,
+          );
+          add(
+            gDrone,
+            mkLine([V3(xi, H, zi), V3(xo, H, zo)], COL_TOP, 0.2),
+            0.2,
+          );
+          add(
+            gDrone,
+            mkLine([V3(xi, 0, zi), V3(xo, 0, zo)], COL_STRUCT, 0.18),
+            0.18,
+          );
+        }
+      }
+
+      // F. End-caps
+      [ARC_S, ARC_E].forEach((a) => {
+        const xi = Math.cos(a) * RI,
+          zi = Math.sin(a) * RI;
+        const xo = Math.cos(a) * RO,
+          zo = Math.sin(a) * RO;
+        add(
+          gDrone,
+          mkLine([V3(xi, -H, zi), V3(xi, H, zi)], COL_INNER, 0.8),
+          0.8,
+        );
+        add(
+          gDrone,
+          mkLine([V3(xo, -H, zo), V3(xo, H, zo)], COL_OUTER, 0.65),
+          0.65,
+        );
+        add(
+          gDrone,
+          mkLine([V3(xi, -H, zi), V3(xo, -H, zo)], COL_BOT, 0.7),
+          0.7,
+        );
+        add(gDrone, mkLine([V3(xi, H, zi), V3(xo, H, zo)], COL_TOP, 0.7), 0.7);
+      });
+
+      // G. Gap ghost arcs
+      {
+        const GAP = Math.PI * 2 - (ARC_E - ARC_S);
+        [0.18, 0.45, 0.72].forEach((frac) => {
+          [
+            [RI, 0.09],
+            [RO, 0.06],
+          ].forEach(([r, op]) => {
+            const pts = [];
+            for (let j = 0; j <= 16; j++) {
+              const a = ARC_E + (j / 16) * GAP * frac;
+              pts.push(V3(Math.cos(a) * r, 0, Math.sin(a) * r));
+            }
+            add(gDrone, mkLine(pts, COL_GHOST, op), op);
+          });
+        });
+        for (let i = 0; i < 12; i++) {
+          const s = hsh("gap" + i);
+          const t = (s % 1000) / 1000;
+          const a = ARC_E + t * GAP;
+          const rr = R * 0.92 + (s % 25);
+          const op = 0.07 + (s % 7) * 0.008;
+          const m = mkWire(
+            new THREE.BoxGeometry(
+              2 + (s % 4),
+              2 + ((s >> 4) & 4),
+              2 + ((s >> 8) & 3),
+            ),
+            COL_GHOST,
+            op,
+          );
+          m.position.set(
+            Math.cos(a) * rr,
+            (((s >> 12) & 0xff) / 255 - 0.5) * H,
+            Math.sin(a) * rr,
+          );
+          add(gDrone, m, op);
+        }
+      }
+
+      // ─── CITY — GITHUB REPOS AS BUILDINGS ON INNER RED SURFACE ──────────────────
+      const gCity = new THREE.Group();
+      gDrone.add(gCity);
+
+      const LANG_COLORS = {
+        JavaScript: 0xf1e05a,
+        TypeScript: 0x3178c6,
+        HTML: 0xe34c26,
+        CSS: 0x563d7c,
+        Python: 0x3572a5,
+        "C++": 0xf34b7d,
+        Rust: 0xdea584,
+        Go: 0x00add8,
+        Ruby: 0x701516,
+        Java: 0xb07219,
+      };
+
+      function placeBuilding(
+        angle,
         yCenter,
-        Math.sin(angle) * (RI - radialDepth / 2)
-      );
-      add(gCity, m, opacity);
-    }
-
-    function clearCity() {
-      while (gCity.children.length > 0) {
-        const c = gCity.children[0];
-        gCity.remove(c);
-        if (c.geometry) c.geometry.dispose();
-        if (c.material) c.material.dispose();
+        radialDepth,
+        vertHeight,
+        arcWidth,
+        color,
+        opacity,
+      ) {
+        const m = mkWire(
+          new THREE.BoxGeometry(radialDepth, vertHeight, arcWidth),
+          color,
+          opacity,
+        );
+        m.rotation.y = -angle;
+        m.position.set(
+          Math.cos(angle) * (RI - radialDepth / 2),
+          yCenter,
+          Math.sin(angle) * (RI - radialDepth / 2),
+        );
+        add(gCity, m, opacity);
       }
-    }
 
-    const cityStatusEl = document.getElementById('city-status');
-    function setCityStatus(msg) { if (cityStatusEl) cityStatusEl.textContent = msg; }
-
-    async function buildCity(username) {
-      setCityStatus('> LOADING ...');
-      clearCity();
-      try {
-        // Register (or re-sync) user in the ring DB
-        const regRes = await fetch('/api/ring/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username })
-        });
-        if (!regRes.ok) {
-          const err = await regRes.json().catch(() => ({}));
-          throw new Error(err.error || `ERROR ${regRes.status}`);
+      function clearCity() {
+        while (gCity.children.length > 0) {
+          const c = gCity.children[0];
+          gCity.remove(c);
+          if (c.geometry) c.geometry.dispose();
+          if (c.material) c.material.dispose();
         }
-        const user = await regRes.json();
+      }
 
-        // Load all registered colonists in the full arc
-        const usersRes = await fetch(`/api/ring/users?from=${ARC_S}&to=${ARC_E}&limit=500`);
-        if (!usersRes.ok) throw new Error('Failed to load ring data');
-        const users = await usersRes.json();
-        if (!Array.isArray(users) || !users.length) throw new Error('NO DATA');
+      const cityStatusEl = document.getElementById("city-status");
+      function setCityStatus(msg) {
+        if (cityStatusEl) cityStatusEl.textContent = msg;
+      }
 
-        users.forEach(u => {
-          const angle  = u.ring_angle;
-          const stars  = u.star_count  || 0;
-          const repos  = u.repo_count  || 1;
-          const col    = LANG_COLORS[u.top_language] || 0xff5555;
-          const radial = 1.5 + Math.min(stars * 0.05, 3.5);
-          const height = 3.5 + Math.min(repos / 10, 5);
-          placeBuilding(angle, 0, radial, height, 1.2, col, 0.60);
-          if (stars > 0) {
-            placeBuilding(angle, -7, radial * 0.55, height * 0.45, 1.0, col, 0.30);
-            placeBuilding(angle,  7, radial * 0.55, height * 0.45, 1.0, col, 0.30);
+      async function buildCity(username) {
+        setCityStatus("> LOADING ...");
+        clearCity();
+        try {
+          // Register (or re-sync) user in the ring DB
+          const regRes = await fetch("/api/ring/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username }),
+          });
+          if (!regRes.ok) {
+            const err = await regRes.json().catch(() => ({}));
+            throw new Error(err.error || `ERROR ${regRes.status}`);
           }
-        });
+          const user = await regRes.json();
 
-        setCityStatus(`> ${users.length} COLONISTS`);
+          // Load all registered colonists in the full arc
+          const usersRes = await fetch(
+            `/api/ring/users?from=${ARC_S}&to=${ARC_E}&limit=500`,
+          );
+          if (!usersRes.ok) throw new Error("Failed to load ring data");
+          const users = await usersRes.json();
+          if (!Array.isArray(users) || !users.length)
+            throw new Error("NO DATA");
 
-        // Fly camera to this user's permanent slot
-        if (typeof user.ring_angle === 'number') {
-          droneAngle = user.ring_angle;
-          droneDir   = 1;
+          users.forEach((u) => {
+            const angle = u.ring_angle;
+            const stars = u.star_count || 0;
+            const repos = u.repo_count || 1;
+            const col = LANG_COLORS[u.top_language] || 0xff5555;
+            const radial = 1.5 + Math.min(stars * 0.05, 3.5);
+            const height = 3.5 + Math.min(repos / 10, 5);
+            placeBuilding(angle, 0, radial, height, 1.2, col, 0.6);
+            if (stars > 0) {
+              placeBuilding(
+                angle,
+                -7,
+                radial * 0.55,
+                height * 0.45,
+                1.0,
+                col,
+                0.3,
+              );
+              placeBuilding(
+                angle,
+                7,
+                radial * 0.55,
+                height * 0.45,
+                1.0,
+                col,
+                0.3,
+              );
+            }
+          });
+
+          setCityStatus(`> ${users.length} COLONISTS`);
+
+          // Fly camera to this user's permanent slot
+          if (typeof user.ring_angle === "number") {
+            droneAngle = user.ring_angle;
+            droneDir = 1;
+          }
+        } catch (e) {
+          console.warn("[Ilion] City fetch failed:", e);
+          setCityStatus(`> ${e.message}`);
         }
-      } catch (e) {
-        console.warn('[Ilion] City fetch failed:', e);
-        setCityStatus(`> ${e.message}`);
-      }
-    }
-
-    const ghUserInput = document.getElementById('gh-user');
-    const ghSubmitBtn = document.getElementById('gh-submit');
-    function loadFromInput() { const u = ghUserInput.value.trim(); if (u) buildCity(u); }
-    ghSubmitBtn.addEventListener('click', loadFromInput);
-    ghUserInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); loadFromInput(); } });
-
-    buildCity('eknobl');
-
-    // ─── CAMERA SYSTEM ────────────────────────────────────────────────────────────
-
-    let mode = 'orbital';
-    let droneAngle = ARC_S;
-    let droneDir = 1;    // +1 = forward toward ARC_E, -1 = reverse toward ARC_S
-
-    const ORBITAL_POS = new THREE.Vector3(0, 265, 420);
-    const ORBITAL_TGT = new THREE.Vector3(0, 0, 0);
-    const ORBITAL_FOV = 44;
-
-    const DRONE_POS_R = RI - 5;
-    const DRONE_TGT_R = RI - 20;
-    const DRONE_LOOKAHEAD = 0.32;
-    const DRONE_FOV = 72;
-    const DRONE_ADVANCE = 0.0015;
-
-    function goalDronePos() {
-      return V3(Math.cos(droneAngle) * DRONE_POS_R, 0, Math.sin(droneAngle) * DRONE_POS_R);
-    }
-    function goalDroneTgt() {
-      const la = droneAngle + DRONE_LOOKAHEAD * droneDir;
-      return V3(Math.cos(la) * DRONE_TGT_R, 0, Math.sin(la) * DRONE_TGT_R);
-    }
-
-    const camPos = ORBITAL_POS.clone();
-    const camTgt = ORBITAL_TGT.clone();
-    camera.fov = ORBITAL_FOV;
-    camera.position.copy(camPos);
-    camera.lookAt(camTgt);
-    camera.updateProjectionMatrix();
-
-    function getGoalPos() { return (mode === 'orbital' || mode === 'flyOut') ? ORBITAL_POS : goalDronePos(); }
-    function getGoalTgt() { return (mode === 'orbital' || mode === 'flyOut') ? ORBITAL_TGT : goalDroneTgt(); }
-    function getGoalFov() { return (mode === 'orbital' || mode === 'flyOut') ? ORBITAL_FOV : DRONE_FOV; }
-
-    // ─── INTERACTION ──────────────────────────────────────────────────────────────
-    const hintEl = document.getElementById('hint');
-    const statEl = document.getElementById('status-line'); // may be null now
-
-    const HINTS = {
-      orbital: 'SPACE — APPROACH THE RING',
-      flyIn: 'DESCENDING TO INNER SURFACE …',
-      drone: 'SPACE — PULL BACK  ·  SCROLL ADVANCE/RETREAT  ·  DRAG TO SWEEP',
-      flyOut: 'ASCENDING …'
-    };
-
-    function setMode(m) {
-      mode = m;
-      if (hintEl) hintEl.textContent = HINTS[m] || '';
-    }
-
-    window.addEventListener('wheel', e => {
-      if (mode === 'orbital' && e.deltaY > 15) { setMode('flyIn'); droneAngle = ARC_S; }
-      else if (mode === 'drone' && e.deltaY > 0) { droneAngle = Math.min(ARC_E - 0.15, droneAngle + 0.07); }
-      else if (mode === 'drone' && e.deltaY < 0) {
-        droneAngle -= 0.07;
-        if (droneAngle < ARC_S + 0.05) setMode('flyOut');
-      }
-    }, { passive: true });
-
-    window.addEventListener('keydown', e => {
-      if (e.code === 'Space') {
-        e.preventDefault();
-        if (mode === 'orbital') { setMode('flyIn'); droneAngle = ARC_S; }
-        else if (mode === 'drone' || mode === 'flyIn') setMode('flyOut');
-        else if (mode === 'flyOut') setMode('flyIn');
-        return;
-      }
-      if (e.key === 'Escape' && (mode === 'drone' || mode === 'flyIn')) setMode('flyOut');
-      if (e.key === 'ArrowRight' && mode === 'drone') droneAngle = Math.min(ARC_E - 0.15, droneAngle + 0.05);
-      if (e.key === 'ArrowLeft' && mode === 'drone') { droneAngle -= 0.05; if (droneAngle < ARC_S + 0.05) setMode('flyOut'); }
-    });
-
-    let dragX = null;
-    renderer.domElement.addEventListener('mousedown', e => { if (mode === 'drone') dragX = e.clientX; });
-    renderer.domElement.addEventListener('mousemove', e => {
-      if (dragX === null || mode !== 'drone') return;
-      droneAngle -= (e.clientX - dragX) * 0.003;
-      droneAngle = Math.max(ARC_S + 0.01, Math.min(ARC_E - 0.1, droneAngle));
-      dragX = e.clientX;
-    });
-    renderer.domElement.addEventListener('mouseup', () => { dragX = null; });
-    renderer.domElement.addEventListener('mouseleave', () => { dragX = null; });
-
-    let touchX = null;
-    renderer.domElement.addEventListener('touchstart', e => { if (mode === 'drone') touchX = e.touches[0].clientX; }, { passive: true });
-    renderer.domElement.addEventListener('touchmove', e => {
-      if (touchX === null || mode !== 'drone') return;
-      droneAngle -= (e.touches[0].clientX - touchX) * 0.003;
-      droneAngle = Math.max(ARC_S + 0.01, Math.min(ARC_E - 0.1, droneAngle));
-      touchX = e.touches[0].clientX;
-    }, { passive: true });
-    renderer.domElement.addEventListener('touchend', () => { touchX = null; });
-
-    // ─── UNITS TOGGLE ─────────────────────────────────────────────────────────────
-    const DIMS = {
-      km: { long: '523,200,000', width: '21,000,000', depth: '21,000,000', unit: 'KILOMETERS', label: 'UNITS: KM' },
-      mi: { long: '325,100,000', width: '13,000,000', depth: '13,000,000', unit: 'MILES', label: 'UNITS: MI' }
-    };
-    let currentUnit = 'km';
-
-    document.getElementById('units-toggle').addEventListener('click', () => {
-      currentUnit = (currentUnit === 'km') ? 'mi' : 'km';
-      const d = DIMS[currentUnit];
-      document.getElementById('dim-long').innerHTML = `&gt; ${d.long} ${d.unit} LONG`;
-      document.getElementById('dim-width').innerHTML = `&gt; ${d.width} ${d.unit} WIDTH`;
-      document.getElementById('dim-depth').innerHTML = `&gt; ${d.depth} ${d.unit} DEPTH`;
-      document.getElementById('units-toggle').textContent = d.label;
-    });
-
-    // ─── TOOLTIP POSITIONING ──────────────────────────────────────────────────────
-    const tooltipStar = document.getElementById('tooltip-star');
-    const tooltipRing = document.getElementById('tooltip-ring');
-    const BANNER_H = 46; // px — offset for #ui starting below banner
-
-    // Point on ring arc — use the lowest visible point (near bottom of screen in orbital view)
-    const RING_TOOLTIP_ANGLE = (ARC_S + ARC_E) / 2 + 0.4;
-
-    function updateTooltips() {
-      // Only show in orbital mode, fade with tDrone
-      const alpha = Math.max(0, 1 - tDrone * 4);
-
-      if (alpha < 0.01) {
-        tooltipStar.style.opacity = '0';
-        tooltipRing.style.opacity = '0';
-        return;
       }
 
-      // Project Troy star (world origin) → screen
-      const troyNDC = new THREE.Vector3(0, 0, 0).project(camera);
-      const tx = (troyNDC.x * 0.5 + 0.5) * window.innerWidth;
-      const ty = (troyNDC.y * -0.5 + 0.5) * window.innerHeight;
+      const ghUserInput = document.getElementById("gh-user");
+      const ghSubmitBtn = document.getElementById("gh-submit");
+      function loadFromInput() {
+        const u = ghUserInput.value.trim();
+        if (u) buildCity(u);
+      }
+      ghSubmitBtn.addEventListener("click", loadFromInput);
+      ghUserInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          loadFromInput();
+        }
+      });
 
-      // Position within #ui coord space (offset by banner height)
-      tooltipStar.style.left = (tx - tooltipStar.offsetWidth / 2) + 'px';
-      tooltipStar.style.top = (ty - BANNER_H - tooltipStar.offsetHeight - 16) + 'px';
-      tooltipStar.style.opacity = alpha;
+      buildCity("eknobl");
 
-      // Project a point on the ring arc
-      const ra = RING_TOOLTIP_ANGLE;
-      const ringNDC = new THREE.Vector3(Math.cos(ra) * R, 0, Math.sin(ra) * R).project(camera);
-      const rx = (ringNDC.x * 0.5 + 0.5) * window.innerWidth;
-      const ry = (ringNDC.y * -0.5 + 0.5) * window.innerHeight;
+      // ─── CAMERA SYSTEM ────────────────────────────────────────────────────────────
 
-      tooltipRing.style.left = (rx - tooltipRing.offsetWidth / 2) + 'px';
-      tooltipRing.style.top = (ry - BANNER_H - tooltipRing.offsetHeight - 16) + 'px';
-      tooltipRing.style.opacity = alpha;
-    }
+      let mode = "orbital";
+      let droneAngle = ARC_S;
+      let droneDir = 1; // +1 = forward toward ARC_E, -1 = reverse toward ARC_S
 
-    // ─── ANIMATION ────────────────────────────────────────────────────────────────
-    let tick = 0;
-    const UP_ORB = new THREE.Vector3(0, 1, 0);
-    const camUpDrone = new THREE.Vector3();
+      const ORBITAL_POS = new THREE.Vector3(0, 265, 420);
+      const ORBITAL_TGT = new THREE.Vector3(0, 0, 0);
+      const ORBITAL_FOV = 44;
 
-    function blendGroups() {
-      const target = (mode === 'drone' || mode === 'flyIn') ? 1 : 0;
-      tDrone += (target - tDrone) * 0.028;
-      const tO = Math.max(0, 1 - tDrone * 2);
-      const tD = Math.max(0, tDrone * 2 - 1);
-      gOrbit.traverse(o => { if (o.material && o.userData.baseOp !== undefined) o.material.opacity = o.userData.baseOp * tO; });
-      gDrone.traverse(o => { if (o.material && o.userData.baseOp !== undefined) o.material.opacity = o.userData.baseOp * tD; });
-    }
+      const DRONE_POS_R = RI - 5;
+      const DRONE_TGT_R = RI - 20;
+      const DRONE_LOOKAHEAD = 0.32;
+      const DRONE_FOV = 72;
+      const DRONE_ADVANCE = 0.0015;
 
-    function animate() {
-      requestAnimationFrame(animate);
-      tick += 0.001;
-
-      const inTransit = mode === 'flyIn' || mode === 'flyOut';
-      const speed = inTransit ? 0.024 : (mode === 'drone' ? 0.12 : 0.06);
-
-      camPos.lerp(getGoalPos(), speed);
-      camTgt.lerp(getGoalTgt(), speed);
-      camera.fov += (getGoalFov() - camera.fov) * 0.04;
-
-      if (mode === 'drone') {
-        droneAngle += DRONE_ADVANCE * droneDir;
-        if (droneAngle >= ARC_E - 0.15) { droneAngle = ARC_E - 0.15; droneDir = -1; }
-        if (droneAngle <= ARC_S) { droneAngle = ARC_S; droneDir = 1; }
+      function goalDronePos() {
+        return V3(
+          Math.cos(droneAngle) * DRONE_POS_R,
+          0,
+          Math.sin(droneAngle) * DRONE_POS_R,
+        );
+      }
+      function goalDroneTgt() {
+        const la = droneAngle + DRONE_LOOKAHEAD * droneDir;
+        return V3(Math.cos(la) * DRONE_TGT_R, 0, Math.sin(la) * DRONE_TGT_R);
       }
 
-      camUpDrone.set(-Math.cos(droneAngle), 0, -Math.sin(droneAngle));
-      camera.up.lerpVectors(UP_ORB, camUpDrone, tDrone).normalize();
-      camera.updateProjectionMatrix();
+      const camPos = ORBITAL_POS.clone();
+      const camTgt = ORBITAL_TGT.clone();
+      camera.fov = ORBITAL_FOV;
       camera.position.copy(camPos);
       camera.lookAt(camTgt);
+      camera.updateProjectionMatrix();
 
-      if (mode === 'flyIn' && camPos.distanceTo(getGoalPos()) < 5) setMode('drone');
-      if (mode === 'flyOut' && camPos.distanceTo(getGoalPos()) < 5) setMode('orbital');
-
-      if (mode === 'orbital') {
-        ORBITAL_POS.x = Math.sin(tick * 0.12) * 80;
-        ORBITAL_POS.z = 420 + Math.sin(tick * 0.08) * 30;
+      function getGoalPos() {
+        return mode === "orbital" || mode === "flyOut"
+          ? ORBITAL_POS
+          : goalDronePos();
+      }
+      function getGoalTgt() {
+        return mode === "orbital" || mode === "flyOut"
+          ? ORBITAL_TGT
+          : goalDroneTgt();
+      }
+      function getGoalFov() {
+        return mode === "orbital" || mode === "flyOut"
+          ? ORBITAL_FOV
+          : DRONE_FOV;
       }
 
-      blendGroups();
-      updateTooltips();
+      // ─── INTERACTION ──────────────────────────────────────────────────────────────
+      const hintEl = document.getElementById("hint");
+      const statEl = document.getElementById("status-line"); // may be null now
 
-      scene.children.forEach(obj => {
-        if (obj.userData.spin) {
-          obj.rotation.x += obj.userData.spin.x;
-          obj.rotation.y += obj.userData.spin.y;
+      const HINTS = {
+        orbital: "SPACE — APPROACH THE RING",
+        flyIn: "DESCENDING TO INNER SURFACE …",
+        drone: "SPACE — PULL BACK  ·  SCROLL ADVANCE/RETREAT  ·  DRAG TO SWEEP",
+        flyOut: "ASCENDING …",
+      };
+
+      function setMode(m) {
+        mode = m;
+        if (hintEl) hintEl.textContent = HINTS[m] || "";
+      }
+
+      window.addEventListener(
+        "wheel",
+        (e) => {
+          if (mode === "orbital" && e.deltaY > 15) {
+            setMode("flyIn");
+            droneAngle = ARC_S;
+          } else if (mode === "drone" && e.deltaY > 0) {
+            droneAngle = Math.min(ARC_E - 0.15, droneAngle + 0.07);
+          } else if (mode === "drone" && e.deltaY < 0) {
+            droneAngle -= 0.07;
+            if (droneAngle < ARC_S + 0.05) setMode("flyOut");
+          }
+        },
+        { passive: true },
+      );
+
+      window.addEventListener("keydown", (e) => {
+        if (e.code === "Space") {
+          e.preventDefault();
+          if (mode === "orbital") {
+            setMode("flyIn");
+            droneAngle = ARC_S;
+          } else if (mode === "drone" || mode === "flyIn") setMode("flyOut");
+          else if (mode === "flyOut") setMode("flyIn");
+          return;
+        }
+        if (e.key === "Escape" && (mode === "drone" || mode === "flyIn"))
+          setMode("flyOut");
+        if (e.key === "ArrowRight" && mode === "drone")
+          droneAngle = Math.min(ARC_E - 0.15, droneAngle + 0.05);
+        if (e.key === "ArrowLeft" && mode === "drone") {
+          droneAngle -= 0.05;
+          if (droneAngle < ARC_S + 0.05) setMode("flyOut");
         }
       });
 
-      renderer.render(scene, camera);
-    }
-    animate();
+      let dragX = null;
+      renderer.domElement.addEventListener("mousedown", (e) => {
+        if (mode === "drone") dragX = e.clientX;
+      });
+      renderer.domElement.addEventListener("mousemove", (e) => {
+        if (dragX === null || mode !== "drone") return;
+        droneAngle -= (e.clientX - dragX) * 0.003;
+        droneAngle = Math.max(ARC_S + 0.01, Math.min(ARC_E - 0.1, droneAngle));
+        dragX = e.clientX;
+      });
+      renderer.domElement.addEventListener("mouseup", () => {
+        dragX = null;
+      });
+      renderer.domElement.addEventListener("mouseleave", () => {
+        dragX = null;
+      });
 
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-  </script>
-</body>
+      let touchX = null;
+      renderer.domElement.addEventListener(
+        "touchstart",
+        (e) => {
+          if (mode === "drone") touchX = e.touches[0].clientX;
+        },
+        { passive: true },
+      );
+      renderer.domElement.addEventListener(
+        "touchmove",
+        (e) => {
+          if (touchX === null || mode !== "drone") return;
+          droneAngle -= (e.touches[0].clientX - touchX) * 0.003;
+          droneAngle = Math.max(
+            ARC_S + 0.01,
+            Math.min(ARC_E - 0.1, droneAngle),
+          );
+          touchX = e.touches[0].clientX;
+        },
+        { passive: true },
+      );
+      renderer.domElement.addEventListener("touchend", () => {
+        touchX = null;
+      });
 
+      // ─── UNITS TOGGLE ─────────────────────────────────────────────────────────────
+      const DIMS = {
+        km: {
+          long: "523,200,000",
+          width: "21,000,000",
+          depth: "21,000,000",
+          unit: "KILOMETERS",
+          label: "UNITS: KM",
+        },
+        mi: {
+          long: "325,100,000",
+          width: "13,000,000",
+          depth: "13,000,000",
+          unit: "MILES",
+          label: "UNITS: MI",
+        },
+      };
+      let currentUnit = "km";
+
+      document.getElementById("units-toggle").addEventListener("click", () => {
+        currentUnit = currentUnit === "km" ? "mi" : "km";
+        const d = DIMS[currentUnit];
+        document.getElementById("dim-long").innerHTML =
+          `&gt; ${d.long} ${d.unit} LONG`;
+        document.getElementById("dim-width").innerHTML =
+          `&gt; ${d.width} ${d.unit} WIDTH`;
+        document.getElementById("dim-depth").innerHTML =
+          `&gt; ${d.depth} ${d.unit} DEPTH`;
+        document.getElementById("units-toggle").textContent = d.label;
+      });
+
+      // ─── TOOLTIP POSITIONING ──────────────────────────────────────────────────────
+      const tooltipStar = document.getElementById("tooltip-star");
+      const tooltipRing = document.getElementById("tooltip-ring");
+      const BANNER_H = 46; // px — offset for #ui starting below banner
+
+      // Point on ring arc — use the lowest visible point (near bottom of screen in orbital view)
+      const RING_TOOLTIP_ANGLE = (ARC_S + ARC_E) / 2 + 0.4;
+
+      function updateTooltips() {
+        // Only show in orbital mode, fade with tDrone
+        const alpha = Math.max(0, 1 - tDrone * 4);
+
+        if (alpha < 0.01) {
+          tooltipStar.style.opacity = "0";
+          tooltipRing.style.opacity = "0";
+          return;
+        }
+
+        // Project Troy star (world origin) → screen
+        const troyNDC = new THREE.Vector3(0, 0, 0).project(camera);
+        const tx = (troyNDC.x * 0.5 + 0.5) * window.innerWidth;
+        const ty = (troyNDC.y * -0.5 + 0.5) * window.innerHeight;
+
+        // Position within #ui coord space (offset by banner height)
+        tooltipStar.style.left = tx - tooltipStar.offsetWidth / 2 + "px";
+        tooltipStar.style.top =
+          ty - BANNER_H - tooltipStar.offsetHeight - 16 + "px";
+        tooltipStar.style.opacity = alpha;
+
+        // Project a point on the ring arc
+        const ra = RING_TOOLTIP_ANGLE;
+        const ringNDC = new THREE.Vector3(
+          Math.cos(ra) * R,
+          0,
+          Math.sin(ra) * R,
+        ).project(camera);
+        const rx = (ringNDC.x * 0.5 + 0.5) * window.innerWidth;
+        const ry = (ringNDC.y * -0.5 + 0.5) * window.innerHeight;
+
+        tooltipRing.style.left = rx - tooltipRing.offsetWidth / 2 + "px";
+        tooltipRing.style.top =
+          ry - BANNER_H - tooltipRing.offsetHeight - 16 + "px";
+        tooltipRing.style.opacity = alpha;
+      }
+
+      // ─── ANIMATION ────────────────────────────────────────────────────────────────
+      let tick = 0;
+      const UP_ORB = new THREE.Vector3(0, 1, 0);
+      const camUpDrone = new THREE.Vector3();
+
+      function blendGroups() {
+        const target = mode === "drone" || mode === "flyIn" ? 1 : 0;
+        tDrone += (target - tDrone) * 0.028;
+        const tO = Math.max(0, 1 - tDrone * 2);
+        const tD = Math.max(0, tDrone * 2 - 1);
+        gOrbit.traverse((o) => {
+          if (o.material && o.userData.baseOp !== undefined)
+            o.material.opacity = o.userData.baseOp * tO;
+        });
+        gDrone.traverse((o) => {
+          if (o.material && o.userData.baseOp !== undefined)
+            o.material.opacity = o.userData.baseOp * tD;
+        });
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        tick += 0.001;
+
+        const inTransit = mode === "flyIn" || mode === "flyOut";
+        const speed = inTransit ? 0.024 : mode === "drone" ? 0.12 : 0.06;
+
+        camPos.lerp(getGoalPos(), speed);
+        camTgt.lerp(getGoalTgt(), speed);
+        camera.fov += (getGoalFov() - camera.fov) * 0.04;
+
+        if (mode === "drone") {
+          droneAngle += DRONE_ADVANCE * droneDir;
+          if (droneAngle >= ARC_E - 0.15) {
+            droneAngle = ARC_E - 0.15;
+            droneDir = -1;
+          }
+          if (droneAngle <= ARC_S) {
+            droneAngle = ARC_S;
+            droneDir = 1;
+          }
+        }
+
+        camUpDrone.set(-Math.cos(droneAngle), 0, -Math.sin(droneAngle));
+        camera.up.lerpVectors(UP_ORB, camUpDrone, tDrone).normalize();
+        camera.updateProjectionMatrix();
+        camera.position.copy(camPos);
+        camera.lookAt(camTgt);
+
+        if (mode === "flyIn" && camPos.distanceTo(getGoalPos()) < 5)
+          setMode("drone");
+        if (mode === "flyOut" && camPos.distanceTo(getGoalPos()) < 5)
+          setMode("orbital");
+
+        if (mode === "orbital") {
+          ORBITAL_POS.x = Math.sin(tick * 0.12) * 80;
+          ORBITAL_POS.z = 420 + Math.sin(tick * 0.08) * 30;
+        }
+
+        blendGroups();
+        updateTooltips();
+
+        scene.children.forEach((obj) => {
+          if (obj.userData.spin) {
+            obj.rotation.x += obj.userData.spin.x;
+            obj.rotation.y += obj.userData.spin.y;
+          }
+        });
+
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        // Update resolution uniform for all LineMaterials to maintain correct thickness
+        lineMaterials.forEach(mat => {
+          mat.resolution.set(window.innerWidth, window.innerHeight);
+        });
+      });
+    </script>
+  </body>
 </html>
