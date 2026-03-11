@@ -1,4 +1,4 @@
-import { pgTable, text, serial, jsonb, timestamp, integer, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, text, serial, jsonb, timestamp, integer, boolean, doublePrecision, bigint, index, uuid } from 'drizzle-orm/pg-core';
 
 export const tournaments = pgTable('tournaments', {
     id: serial('id').primaryKey(),
@@ -36,3 +36,21 @@ export const stories = pgTable('stories', {
     rating: text('rating'), // 'up' or 'down'
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+export const ringUsers = pgTable('ring_users', {
+    id:          uuid('id').primaryKey().defaultRandom(),
+    githubId:    bigint('github_id', { mode: 'number' }).unique().notNull(),
+    username:    text('username').notNull(),
+    avatarUrl:   text('avatar_url'),
+    ringAngle:   doublePrecision('ring_angle').notNull(),
+    repoCount:   integer('repo_count').default(0),
+    starCount:   integer('star_count').default(0),
+    topLanguage: text('top_language'),
+    arcStart:    doublePrecision('arc_start'),
+    arcEnd:      doublePrecision('arc_end'),
+    claimed:     boolean('claimed').default(false).notNull(),
+    lastSynced:  timestamp('last_synced', { withTimezone: true }).defaultNow(),
+    joinedAt:    timestamp('joined_at', { withTimezone: true }).defaultNow(),
+}, (table) => ({
+    angleIdx: index('ring_users_angle_idx').on(table.ringAngle),
+}));

@@ -301,6 +301,29 @@
         text-align: right;
       }
 
+      /* ── ERA HUD ─────────────────────────────────────────────────────── */
+      #era-hud {
+        position: absolute;
+        bottom: 38px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        letter-spacing: 0.12em;
+        opacity: 0;
+        pointer-events: none;
+        white-space: nowrap;
+        transition: opacity 0.4s, color 0.6s;
+      }
+
+      /* ── ERA TOOLTIP OVERRIDES ────────────────────────────────────────── */
+      #tooltip-era-mining { background: #7184a0; }
+      #tooltip-era-rush   { background: #ff8800; }
+      #tooltip-era-magi   { background: #44ddff; color: #000; }
+      #tooltip-era-magi::after { border-top-color: #44ddff; }
+      #tooltip-era-rush::after { border-top-color: #ff8800; }
+      #tooltip-era-mining::after { border-top-color: #7184a0; }
+
       /* ── HINT ────────────────────────────────────────────────────────── */
       #hint {
         position: absolute;
@@ -456,10 +479,15 @@
 
       <!-- Hint -->
       <div id="hint">SPACE — APPROACH THE RING</div>
+      <!-- Era HUD (drone mode only) -->
+      <div id="era-hud"></div>
 
       <!-- Tooltips (positioned by JS) -->
       <div class="tooltip" id="tooltip-star">TROY STAR</div>
       <div class="tooltip" id="tooltip-ring">ILION RING</div>
+      <div class="tooltip era-tip" id="tooltip-era-mining">ERA I  ·  MINING</div>
+      <div class="tooltip era-tip" id="tooltip-era-rush">ERA II  ·  THORIUM RUSH</div>
+      <div class="tooltip era-tip" id="tooltip-era-magi">ERA III  ·  MAGI</div>
     </div>
 
     <!-- ── FOOTER ── -->
@@ -513,6 +541,31 @@
       // Arc: 215° completed, 145° gap
       const ARC_S = -Math.PI * 0.1;
       const ARC_E = Math.PI * 1.085;
+      const ARC_SPAN = ARC_E - ARC_S;
+
+      // ─── ERA SYSTEM ───────────────────────────────────────────────────────────────
+      // Fictional history: 2234–2444 (210 years). Arc position encodes fictional time.
+      const ERA_MINING_END = ARC_S + ARC_SPAN * (70 / 210);   // Mining → Rush boundary
+      const ERA_RUSH_END   = ARC_S + ARC_SPAN * (140 / 210);  // Rush → MAGI boundary
+
+      const ERA_COLORS = { mining: 0x7184a0, rush: 0xff8800, magi: 0x44ddff };
+      const ERA_LABELS = {
+        mining: { label: 'ERA I  ·  MINING OPERATIONS', color: '#7184a0' },
+        rush:   { label: 'ERA II  ·  THORIUM RUSH',     color: '#ff8800' },
+        magi:   { label: 'ERA III  ·  MAGI ERA',        color: '#44ddff' },
+      };
+
+      function getEra(angle) {
+        return angle < ERA_MINING_END ? 'mining' : angle < ERA_RUSH_END ? 'rush' : 'magi';
+      }
+      function fictYear(angle) {
+        return Math.round(2234 + ((angle - ARC_S) / ARC_SPAN) * 210);
+      }
+      function blendHex(a, b, t) {
+        const ar=(a>>16)&0xff, ag=(a>>8)&0xff, ab=a&0xff;
+        const br=(b>>16)&0xff, bg=(b>>8)&0xff, bb=b&0xff;
+        return (Math.round(ar+(br-ar)*t)<<16)|(Math.round(ag+(bg-ag)*t)<<8)|Math.round(ab+(bb-ab)*t);
+      }
 
       // Colours
       const COL_INNER = 0xff3333;
@@ -841,6 +894,21 @@
       const gCity = new THREE.Group();
       gDrone.add(gCity);
 
+      // ─── ERA GATES — permanent landmarks at era boundaries ────────────────────────
+      const gGates = new THREE.Group();
+      gDrone.add(gGates);
+
+      function placeEraGate(angle, col) {
+        // Tall thin pillar spanning full ring cross-section (30 units = ±15, beyond ±H=14)
+        const m = mkWire(new THREE.BoxGeometry(0.3, 30, 0.4), col, 0.9);
+        m.rotation.y = -angle;
+        m.position.set(Math.cos(angle) * RI, 0, Math.sin(angle) * RI);
+        add(gGates, m, 0.9);
+      }
+
+      placeEraGate(ERA_MINING_END, ERA_COLORS.rush);  // cold → hot threshold
+      placeEraGate(ERA_RUSH_END,   ERA_COLORS.magi);  // hot → ordered threshold
+
       const LANG_COLORS = {
         JavaScript: 0xf1e05a,
         TypeScript: 0x3178c6,
@@ -917,10 +985,14 @@
             throw new Error("NO DATA");
 
           users.forEach((u) => {
-            const angle = u.ring_angle;
+            // Use plot center if available, fall back to ring_angle for legacy rows
+            const angle = (u.arc_start != null && u.arc_end != null)
+              ? (u.arc_start + u.arc_end) / 2
+              : u.ring_angle;
             const stars = u.star_count || 0;
             const repos = u.repo_count || 1;
-            const col = LANG_COLORS[u.top_language] || 0xff5555;
+            const langCol = LANG_COLORS[u.top_language] || 0xff5555;
+            const col = blendHex(ERA_COLORS[getEra(angle)], langCol, 0.35);
             const radial = 1.5 + Math.min(stars * 0.05, 3.5);
             const height = 3.5 + Math.min(repos / 10, 5);
             placeBuilding(angle, 0, radial, height, 1.2, col, 0.6);
@@ -1159,6 +1231,23 @@
       // Point on ring arc — use the lowest visible point (near bottom of screen in orbital view)
       const RING_TOOLTIP_ANGLE = (ARC_S + ARC_E) / 2 + 0.4;
 
+      // Era tooltip elements + their anchor angles (midpoint of each era's arc)
+      const ERA_TIPS = [
+        { el: document.getElementById("tooltip-era-mining"), angle: (ARC_S + ERA_MINING_END) / 2 },
+        { el: document.getElementById("tooltip-era-rush"),   angle: (ERA_MINING_END + ERA_RUSH_END) / 2 },
+        { el: document.getElementById("tooltip-era-magi"),   angle: (ERA_RUSH_END + ARC_E) / 2 },
+      ];
+
+      const eraHudEl = document.getElementById("era-hud");
+
+      function projectToScreen(worldX, worldY, worldZ) {
+        const ndc = new THREE.Vector3(worldX, worldY, worldZ).project(camera);
+        return {
+          x: (ndc.x * 0.5 + 0.5) * window.innerWidth,
+          y: (ndc.y * -0.5 + 0.5) * window.innerHeight,
+        };
+      }
+
       function updateTooltips() {
         // Only show in orbital mode, fade with tDrone
         const alpha = Math.max(0, 1 - tDrone * 4);
@@ -1166,34 +1255,29 @@
         if (alpha < 0.01) {
           tooltipStar.style.opacity = "0";
           tooltipRing.style.opacity = "0";
+          ERA_TIPS.forEach(t => t.el.style.opacity = "0");
           return;
         }
 
         // Project Troy star (world origin) → screen
-        const troyNDC = new THREE.Vector3(0, 0, 0).project(camera);
-        const tx = (troyNDC.x * 0.5 + 0.5) * window.innerWidth;
-        const ty = (troyNDC.y * -0.5 + 0.5) * window.innerHeight;
-
-        // Position within #ui coord space (offset by banner height)
+        const { x: tx, y: ty } = projectToScreen(0, 0, 0);
         tooltipStar.style.left = tx - tooltipStar.offsetWidth / 2 + "px";
-        tooltipStar.style.top =
-          ty - BANNER_H - tooltipStar.offsetHeight - 16 + "px";
+        tooltipStar.style.top  = ty - BANNER_H - tooltipStar.offsetHeight - 16 + "px";
         tooltipStar.style.opacity = alpha;
 
         // Project a point on the ring arc
-        const ra = RING_TOOLTIP_ANGLE;
-        const ringNDC = new THREE.Vector3(
-          Math.cos(ra) * R,
-          0,
-          Math.sin(ra) * R,
-        ).project(camera);
-        const rx = (ringNDC.x * 0.5 + 0.5) * window.innerWidth;
-        const ry = (ringNDC.y * -0.5 + 0.5) * window.innerHeight;
-
+        const { x: rx, y: ry } = projectToScreen(Math.cos(RING_TOOLTIP_ANGLE) * R, 0, Math.sin(RING_TOOLTIP_ANGLE) * R);
         tooltipRing.style.left = rx - tooltipRing.offsetWidth / 2 + "px";
-        tooltipRing.style.top =
-          ry - BANNER_H - tooltipRing.offsetHeight - 16 + "px";
+        tooltipRing.style.top  = ry - BANNER_H - tooltipRing.offsetHeight - 16 + "px";
         tooltipRing.style.opacity = alpha;
+
+        // Era tooltips — project midpoint of each era's arc section
+        ERA_TIPS.forEach(({ el, angle }) => {
+          const { x, y } = projectToScreen(Math.cos(angle) * R, 0, Math.sin(angle) * R);
+          el.style.left    = x - el.offsetWidth / 2 + "px";
+          el.style.top     = y - BANNER_H - el.offsetHeight - 32 + "px";
+          el.style.opacity = alpha * 0.85;
+        });
       }
 
       // ─── ANIMATION ────────────────────────────────────────────────────────────────
@@ -1257,6 +1341,17 @@
 
         blendGroups();
         updateTooltips();
+
+        // ── Drone HUD: era name + fictional year ────────────────────────────
+        if (mode === "drone" || tDrone > 0.01) {
+          const era = getEra(droneAngle);
+          const yr  = fictYear(droneAngle);
+          eraHudEl.textContent  = `${ERA_LABELS[era].label}  ·  ${yr}`;
+          eraHudEl.style.color  = ERA_LABELS[era].color;
+          eraHudEl.style.opacity = Math.min(1, tDrone * 4);
+        } else {
+          eraHudEl.style.opacity = "0";
+        }
 
         scene.children.forEach((obj) => {
           if (obj.userData.spin) {
