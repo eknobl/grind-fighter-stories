@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function LandingPage() {
   return (
@@ -567,11 +568,11 @@ export default function LandingPage() {
             <div className="bracket-br" aria-hidden="true" />
           </div>
           <div className="hub-grid">
-            <a href="/wiki" className="hub-tile">
+            <Link href="/wiki" className="hub-tile">
               <span className="tricolon" aria-hidden="true">:::</span>
               <span className="hub-tile-title">WIKI</span>
               <span className="hub-tile-sub">THE HISTORY. THE PLANETS. THE STARSHIPS.</span>
-            </a>
+            </Link>
             <a href="/star-map/" className="hub-tile">
               <span className="tricolon" aria-hidden="true">:::</span>
               <span className="hub-tile-title">STAR MAP</span>
