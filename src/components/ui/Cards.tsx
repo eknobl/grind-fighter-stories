@@ -43,7 +43,7 @@ export const HubCard = ({ title, subtitle, href, isExternal, className = '' }: C
 };
 
 interface PanelProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   className?: string;
 }
 
