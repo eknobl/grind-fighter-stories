@@ -522,7 +522,7 @@ export default function LandingPage() {
               style={{ objectFit: 'cover', objectPosition: 'center top' }}
             />
           </div>
-          <Bracket position="tl" color="white" className="bracket-tl" />
+          <img src="/arrow.svg" alt="" className="bracket-tl" aria-hidden="true" />
           <div className="hero-decos">
             <DecoPlus className="deco deco-plus" />
             <DecoArrows className="deco deco-arrows" />
