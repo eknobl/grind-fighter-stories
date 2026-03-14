@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Orbitron, Share_Tech_Mono, Kode_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/providers/ThemeProvider";
+import NavBar from "@/components/NavBar";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Banner } from "@/components/ui/Banner";
 
 
@@ -62,6 +64,7 @@ export default function RootLayout({
           <Banner />
           {children}
         </ThemeProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
