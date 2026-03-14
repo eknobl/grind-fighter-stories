@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function LandingPage() {
   return (
@@ -72,23 +73,9 @@ export default function LandingPage() {
           overflow: hidden;
           background: var(--bg);
         }
-        .hero-topbar {
-          position: absolute;
-          top: 0; left: 0; right: 0;
-          height: 46px;
-          background: var(--bg);
-          z-index: 10;
-          display: flex;
-          justify-content: flex-end;
-        }
-        .hero-topbar-red {
-          width: 162px; height: 46px;
-          background: var(--red);
-          flex-shrink: 0;
-        }
         .hero-image-wrap {
           position: absolute;
-          top: 46px; left: 0; right: 0; bottom: 0;
+          top: 0; left: 0; right: 0; bottom: 0;
         }
         .hero-img {
           width: 100%; height: 100%;
@@ -523,9 +510,6 @@ export default function LandingPage() {
 
         {/* HERO */}
         <section className="hero">
-          <div className="hero-topbar">
-            <div className="hero-topbar-red" />
-          </div>
           <div className="hero-image-wrap">
             <Image
               src="/images/website01.png"
@@ -567,11 +551,11 @@ export default function LandingPage() {
             <div className="bracket-br" aria-hidden="true" />
           </div>
           <div className="hub-grid">
-            <a href="/wiki" className="hub-tile">
+            <Link href="/wiki" className="hub-tile">
               <span className="tricolon" aria-hidden="true">:::</span>
               <span className="hub-tile-title">WIKI</span>
               <span className="hub-tile-sub">THE HISTORY. THE PLANETS. THE STARSHIPS.</span>
-            </a>
+            </Link>
             <a href="/star-map/" className="hub-tile">
               <span className="tricolon" aria-hidden="true">:::</span>
               <span className="hub-tile-title">STAR MAP</span>
